@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Gestión de Artículos - Multi Local</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- MENU HAMBURGUESA -->
+<div class="hamburger-menu-left" onclick="abrirConfiguracion()">
+  <div class="line"></div>
+  <div class="line"></div>
+  <div class="line"></div>
+</div>
+
+<h1><i class="ph ph-package"></i> Mis Productos</h1>
+
+<div class="product-form-container">
+  <div class="form-header-pro" onclick="toggleFormularioProducto()">
+    <div class="header-icon">
+      <i class="ph ph-x" id="formulario-toggle-icon"></i>
+    </div>
+    <div class="header-text">
+      <h2>Agregar Nuevo Producto</h2>
+      <p>Completa la información del producto para agregarlo al inventario</p>
+    </div>
+  </div>
+  
+  <div class="form-content" id="form-content-collapsible">
+    <div class="form-section">
+      <div class="section-title">
+        <i class="ph ph-info"></i>
+        <span>Información Básica</span>
+      </div>
+      
+      <div class="form-row">
+        <div class="input-group-pro">
+          <label for="nombre">
+            <i class="ph ph-tag"></i>
+            Nombre del Producto
+            <span class="required">*</span>
+          </label>
+          <input type="text" id="nombre" placeholder="Ej: Laptop HP Pavilion" class="form-input">
+          <div class="input-underline"></div>
+        </div>
+        
+        <div class="input-group-pro">
+          <label for="codigo">
+            <i class="ph ph-barcode"></i>
+            Código/SKU
+            <span class="required">*</span>
+          </label>
+          <input type="text" id="codigo" placeholder="Ej: HP-PAV-001" class="form-input">
+          <div class="input-underline"></div>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="input-group-pro">
+          <label for="marca">
+            <i class="ph ph-stamp"></i>
+            Marca
+            <span class="required">*</span>
+          </label>
+          <input type="text" id="marca" placeholder="Ej: HP, Samsung, Sony..." class="form-input">
+          <div class="input-underline"></div>
+        </div>
+        
+        <div class="input-group-pro">
+          <label for="cantidad">
+            <i class="ph ph-package"></i>
+            Stock Inicial
+          </label>
+          <input type="number" id="cantidad" placeholder="0" min="0" class="form-input">
+          <div class="input-underline"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-section">
+      <div class="section-title">
+        <i class="ph ph-folders"></i>
+        <span>Categorización</span>
+      </div>
+      
+      <div class="form-row">
+        <div class="input-group-pro full-width">
+          <label for="grupo">
+            <i class="ph ph-folder"></i>
+            Grupo/Categoría
+          </label>
+          <div class="select-wrapper">
+            <select id="grupo" class="form-select">
+              <option value="">Seleccionar grupo...</option>
+            </select>
+            <i class="ph ph-caret-down select-arrow"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-section">
+      <div class="section-title">
+        <i class="ph ph-image"></i>
+        <span>Imagen del Producto</span>
+      </div>
+      
+      <div class="form-row">
+        <div class="image-upload-container">
+          <div class="upload-area" onclick="document.getElementById('foto').click()">
+            <input type="file" id="foto" accept="image/*" style="display: none;">
+            <div class="upload-icon">
+              <i class="ph ph-cloud-arrow-up"></i>
+            </div>
+            <div class="upload-text">
+              <span class="upload-title">Agregar Imagen</span>
+              <span class="upload-subtitle">Haz clic o arrastra una imagen aquí</span>
+            </div>
+          </div>
+          <div class="file-info">
+            <span class="file-input-text">Sin imagen seleccionada</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="form-actions-pro" id="form-actions-collapsible">
+    <button type="button" class="btn-cancel" onclick="limpiarFormulario()">
+      <i class="ph ph-x"></i>
+      Cancelar
+    </button>
+    <button type="button" onclick="agregar()" class="btn-add-pro">
+      <i class="ph ph-plus"></i>
+      <span>Agregar Producto</span>
+      <div class="btn-loader" style="display: none;">
+        <i class="ph ph-circle-notch"></i>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- Buscador fijo ahora en la parte superior -->
+<div class="search-input-container">
+  <div class="fixed-filter-buttons">
+    <button class="fixed-filter-icon" onclick="abrirFiltroGrupos()" title="Filtrar por grupos">
+      <i class="ph ph-folder"></i>
+    </button>
+    
+    <button class="fixed-filter-icon" onclick="abrirFiltroVisibilidad()" title="Filtrar por visibilidad">
+      <i class="ph ph-eye"></i>
+    </button>
+    
+    <button class="fixed-filter-icon" onclick="abrirFiltroStock()" title="Filtrar por stock">
+      <i class="ph ph-package"></i>
+    </button>
+  </div>
+  
+  <input type="text" id="buscador" placeholder="Buscar por nombre, marca o código..." oninput="filtrar()">
+  <i class="ph ph-magnifying-glass search-icon"></i>
+</div>
+
+<!-- Dropdowns de filtro movidos fuera de la sección -->
+<div id="filtroGrupos" class="filter-dropdown" style="display:none;">
+  <div class="dropdown-header">
+    <h4><i class="ph ph-folder"></i> Filtrar por Grupo</h4>
+  </div>
+  <select id="filtroGrupo" onchange="filtrarPorGrupo()">
+    <option value="">Todos los grupos</option>
+  </select>
+</div>
+
+<div id="filtroVisibilidad" class="filter-dropdown" style="display:none;">
+  <div class="dropdown-header">
+    <h4><i class="ph ph-eye"></i> Filtrar por Visibilidad</h4>
+  </div>
+  <div class="visibility-options">
+    <label class="radio-option">
+      <input type="radio" name="filtroVis" value="todos" checked onchange="filtrarPorVisibilidad()">
+      <span>Todos los artículos</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="filtroVis" value="visibles" onchange="filtrarPorVisibilidad()">
+      <span>Solo visibles</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="filtroVis" value="ocultos" onchange="filtrarPorVisibilidad()">
+      <span>Solo ocultos</span>
+    </label>
+  </div>
+</div>
+
+<div id="filtroStock" class="filter-dropdown" style="display:none;">
+  <div class="dropdown-header">
+    <h4><i class="ph ph-package"></i> Filtrar por Stock</h4>
+  </div>
+  <div class="stock-options">
+    <label class="radio-option">
+      <input type="radio" name="filtroStock" value="todos" checked onchange="filtrarPorStock()">
+      <span>Todos los niveles</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="filtroStock" value="bajo" onchange="filtrarPorStock()">
+      <span>Stock bajo</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="filtroStock" value="sin" onchange="filtrarPorStock()">
+      <span>Sin stock</span>
+    </label>
+  </div>
+</div>
+
+<div class="lista-header">
+  <h2>Lista de artículos</h2>
+  <button class="edit-mode-btn" onclick="toggleEditMode()">
+    <i class="ph ph-pencil-simple"></i>
+  </button>
+</div>
+<div id="listaArticulos"></div>
+
+<hr class="separator">
+<div style="display: flex; align-items: center; gap: 10px;">
+  <button onclick="descargarExcel()"><i class="ph ph-file-xls"></i> Descargar Excel de productos marcados para pedir</button>
+  <button onclick="resetearTodosLosMarcados()" title="Resetear todos los productos marcados para pedir" style="background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
+    <i class="ph ph-arrow-clockwise" style="font-size: 18px;"></i>
+  </button>
+</div>
+
+<!-- MODAL EDITAR -->
+<div id="modalEditar" class="modal">
+  <div class="modal-content">
+    <h3>Editar Producto</h3>
+    <img id="editFoto" src="">
+    <input type="text" id="editNombre" placeholder="Nombre">
+    <input type="text" id="editMarca" placeholder="Marca">
+    <input type="text" id="editCodigo" placeholder="Código">
+    <input type="number" id="editCantidad" placeholder="Cantidad en stock" min="0">
+    <select id="editGrupo">
+      <option value="">Seleccionar grupo</option>
+    </select>
+    <input type="file" id="editArchivo" accept="image/*">
+    <div style="text-align:right;">
+      <button onclick="guardarEdicion()">Guardar</button>
+      <button onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR -->
+<div id="modalEliminar" class="modal">
+  <div class="modal-content">
+    <h3>¿Estás seguro que quieres eliminar este producto?</h3>
+    <div style="text-align:right;">
+      <button onclick="confirmarEliminar()">Sí</button>
+      <button onclick="cancelarEliminar()">No</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR CONFIGURACION -->
+<div id="sidebarConfiguracion" class="sidebar">
+  <div class="sidebar-content">
+    <div class="sidebar-header">
+      <h3><i class="ph ph-gear-six"></i> Configuración</h3>
+    </div>
+    
+    <div class="config-section">
+      <div class="section-header" onclick="toggleSection('configuracionCarga')">
+        <h4><i class="ph ph-toggle-left"></i> Configuración de Carga</h4>
+        <span class="toggle-arrow" id="arrow-configuracionCarga"><i class="ph ph-caret-down"></i></span>
+      </div>
+      <div id="configuracionCarga" class="section-content">
+        <div class="checkbox-group">
+          <label class="checkbox-item">
+            <input type="checkbox" id="habilitarNombre" checked>
+            <span>Nombre del Producto</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="habilitarCodigo" checked>
+            <span>Código/SKU</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="habilitarMarca" checked>
+            <span>Marca</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="habilitarCantidad" checked>
+            <span>Stock Inicial</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="habilitarGrupo" checked>
+            <span>Grupo/Categoría</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="habilitarFoto" checked>
+            <span>Imagen del Producto</span>
+          </label>
+        </div>
+        
+        <div class="stock-config">
+          <label>Stock Mínimo para PDF:</label>
+          <div class="input-group">
+            <input type="number" id="cantidadMinima" value="5" min="0" max="100">
+          </div>
+        </div>
+        
+        <button onclick="aplicarConfiguracionCarga()" class="btn-primary">Aplicar Cambios</button>
+      </div>
+    </div>
+
+
+
+    <div class="config-section">
+      <div class="section-header" onclick="toggleSection('gestionGrupos')">
+        <h4><i class="ph ph-folder"></i> Gestión de Grupos</h4>
+        <span class="toggle-arrow" id="arrow-gestionGrupos"><i class="ph ph-caret-down"></i></span>
+      </div>
+      <div id="gestionGrupos" class="section-content">
+        <div class="input-group">
+          <input type="text" id="nuevoGrupo" placeholder="Nombre del nuevo grupo">
+          <button onclick="agregarGrupo()" class="btn-primary">Agregar</button>
+        </div>
+        <div id="listaGrupos" class="grupos-list"></div>
+      </div>
+    </div>
+    
+    <!-- Espacio para futuras funciones -->
+    <div class="config-section">
+      <div class="section-header" onclick="toggleSection('proximamente')">
+        <h4><i class="ph ph-wrench"></i> Próximamente</h4>
+        <span class="toggle-arrow" id="arrow-proximamente"><i class="ph ph-caret-down"></i></span>
+      </div>
+      <div id="proximamente" class="section-content">
+        <div class="features-compact">
+          <span><i class="ph ph-download"></i> Backup</span>
+          <span><i class="ph ph-arrows-in-line-horizontal"></i> Importar/Exportar</span>
+          <span><i class="ph ph-chart-line"></i> Estadísticas</span>
+          <span><i class="ph ph-bell"></i> Alertas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay" class="overlay" onclick="cerrarConfiguracion()"></div>
+
+<!-- MODAL EXCEL INFO -->
+<div id="modalExcelInfo" class="modal">
+  <div class="modal-content">
+    <h3><i class="ph ph-file-xls"></i> Información para Excel</h3>
+    <input type="text" id="nombreEmpresa" placeholder="Nombre de la empresa">
+    <input type="text" id="nombreUsuario" placeholder="Tu nombre completo">
+    <div style="text-align:right; margin-top:15px;">
+      <button onclick="generarExcel()">Generar Excel</button>
+      <button onclick="cancelarExcel()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMACION RESET -->
+<div id="modalConfirmReset" class="modal-custom" style="display: none;">
+  <div class="modal-content-custom">
+    <div class="modal-header-custom">
+      <i class="ph ph-warning-circle" style="color: #e74c3c; font-size: 20px;"></i>
+      <h3 style="margin: 0; color: #2c3e50;">Confirmar Acción</h3>
+    </div>
+    <div class="modal-body-custom">
+      <p id="textoConfirmacion">¿Estás seguro de que quieres desmarcar todos los productos marcados para pedir?</p>
+    </div>
+    <div class="modal-footer-custom">
+      <button onclick="cancelarReset()" class="btn-cancel-custom">Cancelar</button>
+      <button onclick="confirmarReset()" class="btn-confirm-custom">Sí, desmarcar</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
+
+
