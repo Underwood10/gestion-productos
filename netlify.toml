@@ -13,11 +13,5 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-# Inyectar variables de entorno en el HTML
-[[plugins]]
-  package = "@netlify/plugin-env-inject"
-
-  [plugins.inputs]
-    # Variables que se inyectarán en window.NETLIFY_ENV
-    SUPABASE_URL = ""
-    SUPABASE_ANON_KEY = ""
+# Las variables de entorno ahora se configuran en config.js
+# No necesitamos el plugin de inyección de variables

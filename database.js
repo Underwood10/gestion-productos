@@ -21,13 +21,13 @@ window.addEventListener('offline', () => {
 // ========================================
 
 async function cargarProductosDB() {
-  if (!supabase || !currentUser) {
+  if (!window.supabase || !currentUser) {
     console.warn('Supabase o usuario no disponible');
     return [];
   }
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
       .from('productos')
       .select('*')
       .eq('user_id', currentUser.id)
@@ -50,7 +50,7 @@ async function cargarProductosDB() {
 }
 
 async function guardarProductoDB(producto) {
-  if (!supabase || !currentUser) {
+  if (!window.supabase || !currentUser) {
     console.warn('Guardando en localStorage: Supabase no disponible');
     saveLocalProduct(producto);
     return;
@@ -70,7 +70,7 @@ async function guardarProductoDB(producto) {
       visible: producto.visible !== false
     };
     
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
       .from('productos')
       .insert([productoData])
       .select()
@@ -93,14 +93,14 @@ async function guardarProductoDB(producto) {
 }
 
 async function actualizarProductoDB(id, cambios) {
-  if (!supabase || !currentUser) {
+  if (!window.supabase || !currentUser) {
     console.warn('Actualizando localStorage: Supabase no disponible');
     updateLocalProduct(id, cambios);
     return;
   }
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
       .from('productos')
       .update(cambios)
       .eq('id', id)
@@ -124,14 +124,14 @@ async function actualizarProductoDB(id, cambios) {
 }
 
 async function eliminarProductoDB(id) {
-  if (!supabase || !currentUser) {
+  if (!window.supabase || !currentUser) {
     console.warn('Eliminando de localStorage: Supabase no disponible');
     deleteLocalProduct(id);
     return;
   }
   
   try {
-    const { error } = await supabase
+    const { error } = await window.supabase
       .from('productos')
       .delete()
       .eq('id', id)
@@ -157,13 +157,13 @@ async function eliminarProductoDB(id) {
 // ========================================
 
 async function cargarGruposDB() {
-  if (!supabase || !currentUser) {
+  if (!window.supabase || !currentUser) {
     console.warn('Supabase o usuario no disponible');
     return getLocalGroups();
   }
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
       .from('grupos')
       .select('*')
       .eq('user_id', currentUser.id)
@@ -186,14 +186,14 @@ async function cargarGruposDB() {
 }
 
 async function guardarGrupoDB(nombreGrupo) {
-  if (!supabase || !currentUser) {
+  if (!window.supabase || !currentUser) {
     console.warn('Guardando grupo en localStorage: Supabase no disponible');
     saveLocalGroup(nombreGrupo);
     return;
   }
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
       .from('grupos')
       .insert([{
         user_id: currentUser.id,
@@ -218,14 +218,14 @@ async function guardarGrupoDB(nombreGrupo) {
 }
 
 async function eliminarGrupoDB(nombreGrupo) {
-  if (!supabase || !currentUser) {
+  if (!window.supabase || !currentUser) {
     console.warn('Eliminando grupo de localStorage: Supabase no disponible');
     deleteLocalGroup(nombreGrupo);
     return;
   }
   
   try {
-    const { error } = await supabase
+    const { error } = await window.supabase
       .from('grupos')
       .delete()
       .eq('user_id', currentUser.id)
@@ -251,13 +251,13 @@ async function eliminarGrupoDB(nombreGrupo) {
 // ========================================
 
 async function cargarConfiguracionDB() {
-  if (!supabase || !currentUser) {
+  if (!window.supabase || !currentUser) {
     console.warn('Supabase o usuario no disponible');
     return getLocalConfig();
   }
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
       .from('configuracion_usuario')
       .select('*')
       .eq('user_id', currentUser.id)
@@ -285,14 +285,14 @@ async function cargarConfiguracionDB() {
 }
 
 async function guardarConfiguracionDB(stockMinimo, configuracionCarga) {
-  if (!supabase || !currentUser) {
+  if (!window.supabase || !currentUser) {
     console.warn('Guardando configuración en localStorage: Supabase no disponible');
     saveLocalConfig(stockMinimo, configuracionCarga);
     return;
   }
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
       .from('configuracion_usuario')
       .upsert({
         user_id: currentUser.id,
@@ -407,7 +407,7 @@ function getDefaultConfig() {
 // ========================================
 
 async function migrarDatosLocalASupabase() {
-  if (!supabase || !currentUser) return;
+  if (!window.supabase || !currentUser) return;
   
   console.log('Migrando datos locales a Supabase...');
   

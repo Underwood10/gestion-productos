@@ -1,20 +1,20 @@
 // ========== CONFIGURACIÓN DE SUPABASE ==========
-// Las variables se obtienen del entorno de Netlify
-const SUPABASE_URL = window.NETLIFY_ENV?.SUPABASE_URL || 'https://lalmhqdwerotieziyuvd.supabase.co';
-const SUPABASE_ANON_KEY = window.NETLIFY_ENV?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhbG1ocWR3ZXJvdGlleml5dXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NTc5MTUsImV4cCI6MjA3MzUzMzkxNX0.fGkYr0zgPMqYecW_O939_Gv1K-vMGKPG_9Ft-HVVYJY';
+// Las variables se obtienen del archivo config.js
+const SUPABASE_URL = window.APP_CONFIG?.SUPABASE_URL;
+const SUPABASE_ANON_KEY = window.APP_CONFIG?.SUPABASE_ANON_KEY;
 
 // Solo inicializar si las credenciales están configuradas
 let supabase = null;
 let currentUser = null;
 
 function initSupabase() {
-  if (SUPABASE_URL.includes('TU-PROYECTO') || SUPABASE_ANON_KEY === 'eyJ...TU_CLAVE_PUBLICA_AQUI') {
-    showAuthMessage('⚠️ Configura primero tus credenciales de Supabase en auth.js', 'warning');
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('TU_URL_DE_SUPABASE_AQUI') || SUPABASE_ANON_KEY.includes('TU_CLAVE_ANONIMA_DE_SUPABASE_AQUI')) {
+    showAuthMessage('⚠️ Configura primero tus credenciales de Supabase en config.js', 'warning');
     return false;
   }
   
   try {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return true;
   } catch (error) {
     console.error('Error inicializando Supabase:', error);
@@ -25,7 +25,7 @@ function initSupabase() {
 
 // ========== FUNCIONES DE AUTENTICACIÓN ==========
 async function login() {
-  if (!supabase) return;
+  if (!window.supabase) return;
   
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
@@ -39,7 +39,7 @@ async function login() {
   setLoading(loginBtn, true);
   
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await window.supabase.auth.signInWithPassword({
       email: email,
       password: password
     });
@@ -62,7 +62,7 @@ async function login() {
 }
 
 async function register() {
-  if (!supabase) return;
+  if (!window.supabase) return;
   
   const name = document.getElementById('registerName').value.trim();
   const email = document.getElementById('registerEmail').value.trim();
@@ -82,7 +82,7 @@ async function register() {
   setLoading(registerBtn, true);
   
   try {
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await window.supabase.auth.signUp({
       email: email,
       password: password,
       options: {
@@ -114,11 +114,11 @@ async function register() {
 }
 
 async function logout() {
-  if (!supabase) return;
+  if (!window.supabase) return;
   
   if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
     try {
-      await supabase.auth.signOut();
+      await window.supabase.auth.signOut();
       currentUser = null;
       showAuthScreen();
       showAuthMessage('Sesión cerrada correctamente', 'info');
@@ -130,10 +130,10 @@ async function logout() {
 
 // ========== GESTIÓN DE SESIÓN ==========
 async function checkAuthState() {
-  if (!supabase) return;
+  if (!window.supabase) return;
   
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await window.supabase.auth.getUser();
     
     if (user) {
       currentUser = user;
@@ -149,9 +149,9 @@ async function checkAuthState() {
 
 // Escuchar cambios en el estado de autenticación
 function setupAuthListener() {
-  if (!supabase) return;
+  if (!window.supabase) return;
   
-  supabase.auth.onAuthStateChange((event, session) => {
+  window.supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session) {
       currentUser = session.user;
       showMainApp();
