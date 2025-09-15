@@ -9,6 +9,86 @@
 </head>
 <body>
 
+<!-- PANTALLA DE AUTENTICACION -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-container">
+    <div class="auth-header">
+      <h1><i class="ph ph-package"></i> Gestión de Productos</h1>
+      <p>Accede a tu inventario personal</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button id="loginTab" class="auth-tab active" onclick="showLogin()">Iniciar Sesión</button>
+      <button id="registerTab" class="auth-tab" onclick="showRegister()">Registrarse</button>
+    </div>
+
+    <div id="authMessage" class="auth-message" style="display: none;"></div>
+
+    <!-- FORMULARIO LOGIN -->
+    <form id="loginForm" class="auth-form active">
+      <div class="form-group">
+        <label for="loginEmail">
+          <i class="ph ph-envelope"></i>
+          Email
+        </label>
+        <input type="email" id="loginEmail" placeholder="tu@email.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="loginPassword">
+          <i class="ph ph-lock"></i>
+          Contraseña
+        </label>
+        <input type="password" id="loginPassword" placeholder="Tu contraseña" required>
+      </div>
+
+      <button type="submit" id="loginBtn" class="auth-btn">
+        <span class="btn-text">Iniciar Sesión</span>
+        <div class="btn-loader" style="display: none;">
+          <i class="ph ph-circle-notch"></i>
+        </div>
+      </button>
+    </form>
+
+    <!-- FORMULARIO REGISTRO -->
+    <form id="registerForm" class="auth-form">
+      <div class="form-group">
+        <label for="registerName">
+          <i class="ph ph-user"></i>
+          Nombre completo
+        </label>
+        <input type="text" id="registerName" placeholder="Tu nombre completo" required>
+      </div>
+
+      <div class="form-group">
+        <label for="registerEmail">
+          <i class="ph ph-envelope"></i>
+          Email
+        </label>
+        <input type="email" id="registerEmail" placeholder="tu@email.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="registerPassword">
+          <i class="ph ph-lock"></i>
+          Contraseña
+        </label>
+        <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" required>
+      </div>
+
+      <button type="submit" id="registerBtn" class="auth-btn">
+        <span class="btn-text">Crear Cuenta</span>
+        <div class="btn-loader" style="display: none;">
+          <i class="ph ph-circle-notch"></i>
+        </div>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="mainApp" style="display: none;">
+
 <!-- MENU HAMBURGUESA -->
 <div class="hamburger-menu-left" onclick="abrirConfiguracion()">
   <div class="line"></div>
@@ -16,7 +96,7 @@
   <div class="line"></div>
 </div>
 
-<h1><i class="ph ph-package"></i> Mis Productos</h1>
+<h1><i class="ph ph-package"></i> Mis Productos <span id="userInfo"></span></h1>
 
 <div class="product-form-container">
   <div class="form-header-pro" onclick="toggleFormularioProducto()">
@@ -348,6 +428,8 @@
 <!-- OVERLAY -->
 <div id="overlay" class="overlay" onclick="cerrarConfiguracion()"></div>
 
+</div> <!-- Cierre de mainApp -->
+
 <!-- MODAL EXCEL INFO -->
 <div id="modalExcelInfo" class="modal">
   <div class="modal-content">
@@ -378,7 +460,10 @@
   </div>
 </div>
 
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="database.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
