@@ -117,6 +117,35 @@
 
 <h1><i class="ph ph-package"></i> Mis Productos <span id="userInfo"></span></h1>
 
+<!-- CARRITO DE COMPRAS (solo para usuarios no admin) -->
+<div id="carrito-display" class="carrito-display" style="display: none;">
+  <div class="carrito-header" onclick="toggleCarrito()">
+    <i class="ph ph-shopping-cart"></i>
+    <span>Carrito (<span id="carrito-count">0</span>)</span>
+    <span class="carrito-total-display">$<span id="carrito-total">0.00</span></span>
+    <i class="ph ph-caret-down carrito-toggle-icon"></i>
+  </div>
+
+  <div id="carrito-panel" class="carrito-panel" style="display: none;">
+    <div class="carrito-content">
+      <div id="carrito-lista" class="carrito-lista">
+        <!-- Los items del carrito se cargan dinámicamente -->
+      </div>
+
+      <div class="carrito-actions">
+        <button class="btn-vaciar-carrito" onclick="vaciarCarrito()">
+          <i class="ph ph-trash"></i>
+          Vaciar Carrito
+        </button>
+        <button class="btn-procesar-pedido" onclick="procesarPedido()">
+          <i class="ph ph-check"></i>
+          Procesar Pedido
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="product-form-container">
   <div class="form-header-pro" onclick="toggleFormularioProducto()">
     <div class="header-icon">

@@ -47,6 +47,7 @@ async function reloadUserData() {
         cargarDescuentosDesdeStorage();
         cargarMarcasEnSelect();
         actualizarListaDescuentosActivos();
+        inicializarCarrito();
         renderizar();
         cargarConfiguracionCarga();
         const cantidadMinima = document.getElementById("cantidadMinima");
@@ -168,7 +169,7 @@ function renderizar(lista=null){
             <i class="ph ph-minus"></i>
           </button>
           <button class="${art.faltante?'okBtn':'pedirBtn'}" onclick="marcarFaltanteIndex(${realIndex})">
-            <i class="ph ${art.faltante?'ph-check':'ph-shopping-cart'}"></i> ${art.faltante?"Disponible":"Pedir"}
+            <i class="ph ${art.faltante?'ph-check':'ph-shopping-cart'}"></i> ${art.faltante?"Disponible":(isAdmin() ? "Solo" : "Pedir")}
           </button>
           <button class="quantity-btn" onclick="cambiarCantidad(${realIndex}, 1)">
             <i class="ph ph-plus"></i>
@@ -281,8 +282,213 @@ function limpiarFormulario() {
   }
 }
 
+// Variables globales para el carrito
+let carrito = [];
+let totalCarrito = 0;
+
 // Faltante
-function marcarFaltanteIndex(index){ articulos[index].faltante=!articulos[index].faltante; guardar(); renderizar(); }
+function marcarFaltanteIndex(index) {
+  if (isAdmin()) {
+    // Para admin: comportamiento original (solo marcar faltante)
+    articulos[index].faltante = !articulos[index].faltante;
+    guardar();
+    renderizar();
+  } else {
+    // Para usuarios normales: agregar al carrito
+    if (!articulos[index].faltante) {
+      // Agregar al carrito
+      const producto = articulos[index];
+      const precioInfo = calcularPrecioConDescuento(producto);
+
+      const itemCarrito = {
+        id: producto.id,
+        nombre: producto.nombre,
+        marca: producto.marca,
+        codigo: producto.codigo,
+        precio: precioInfo.precio,
+        descuento: precioInfo.descuento,
+        tieneDescuento: precioInfo.tieneDescuento
+      };
+
+      carrito.push(itemCarrito);
+      articulos[index].faltante = true; // Marcar como "en carrito"
+      actualizarCarrito();
+      guardar();
+      renderizar();
+    } else {
+      // Remover del carrito
+      const producto = articulos[index];
+      carrito = carrito.filter(item => item.id !== producto.id);
+      articulos[index].faltante = false;
+      actualizarCarrito();
+      guardar();
+      renderizar();
+    }
+  }
+}
+
+// Función para inicializar el carrito según el rol del usuario
+function inicializarCarrito() {
+  const carritoDisplay = document.getElementById('carrito-display');
+
+  if (carritoDisplay) {
+    if (isAdmin()) {
+      // Para admin: ocultar carrito completamente
+      carritoDisplay.style.display = 'none';
+    } else {
+      // Para usuarios normales: mostrar carrito si hay items
+      actualizarCarrito();
+    }
+  }
+}
+
+// Función para actualizar el carrito
+function actualizarCarrito() {
+  totalCarrito = carrito.reduce((total, item) => total + item.precio, 0);
+  actualizarDisplayCarrito();
+}
+
+// Función para actualizar la visualización del carrito
+function actualizarDisplayCarrito() {
+  const carritoElement = document.getElementById('carrito-display');
+  const carritoCount = document.getElementById('carrito-count');
+  const carritoTotal = document.getElementById('carrito-total');
+
+  if (carritoElement) {
+    if (carrito.length === 0) {
+      carritoElement.style.display = 'none';
+    } else {
+      carritoElement.style.display = 'block';
+
+      if (carritoCount) {
+        carritoCount.textContent = carrito.length;
+      }
+
+      if (carritoTotal) {
+        carritoTotal.textContent = totalCarrito.toFixed(2);
+      }
+
+      // Actualizar lista de productos en el carrito
+      const carritoLista = document.getElementById('carrito-lista');
+      if (carritoLista) {
+        carritoLista.innerHTML = carrito.map(item => `
+          <div class="carrito-item">
+            <div class="carrito-item-info">
+              <strong>${item.nombre}</strong>
+              <small>${item.marca} - ${item.codigo}</small>
+            </div>
+            <div class="carrito-item-precio">
+              ${item.tieneDescuento ?
+                `<span class="precio-descuento">$${item.precio.toFixed(2)} <small>(${item.descuento}% OFF)</small></span>` :
+                `$${item.precio.toFixed(2)}`
+              }
+            </div>
+            <button class="carrito-remove-btn" onclick="removerDelCarrito('${item.id}')">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+    }
+  }
+}
+
+// Función para remover un item del carrito
+function removerDelCarrito(itemId) {
+  carrito = carrito.filter(item => item.id !== itemId);
+
+  // Encontrar el producto en articulos y desmarcarlo
+  const productIndex = articulos.findIndex(art => art.id === itemId);
+  if (productIndex >= 0) {
+    articulos[productIndex].faltante = false;
+  }
+
+  actualizarCarrito();
+  guardar();
+  renderizar();
+}
+
+// Función para vaciar el carrito
+function vaciarCarrito() {
+  if (carrito.length === 0) return;
+
+  if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
+    // Desmarcar todos los productos del carrito
+    carrito.forEach(item => {
+      const productIndex = articulos.findIndex(art => art.id === item.id);
+      if (productIndex >= 0) {
+        articulos[productIndex].faltante = false;
+      }
+    });
+
+    carrito = [];
+    actualizarCarrito();
+    guardar();
+    renderizar();
+  }
+}
+
+// Función para toggle del carrito
+function toggleCarrito() {
+  const carritoPanel = document.getElementById('carrito-panel');
+  const toggleIcon = document.querySelector('.carrito-toggle-icon');
+
+  if (carritoPanel) {
+    if (carritoPanel.style.display === 'block') {
+      carritoPanel.style.display = 'none';
+      if (toggleIcon) toggleIcon.className = 'ph ph-caret-down carrito-toggle-icon';
+    } else {
+      carritoPanel.style.display = 'block';
+      if (toggleIcon) toggleIcon.className = 'ph ph-caret-up carrito-toggle-icon';
+    }
+  }
+}
+
+// Función para procesar el pedido
+function procesarPedido() {
+  if (carrito.length === 0) {
+    alert('El carrito está vacío');
+    return;
+  }
+
+  // Crear resumen del pedido
+  let resumen = 'RESUMEN DEL PEDIDO\n\n';
+  resumen += `Productos (${carrito.length}):\n`;
+  resumen += '------------------------\n';
+
+  carrito.forEach(item => {
+    resumen += `• ${item.nombre}\n`;
+    resumen += `  Marca: ${item.marca}\n`;
+    resumen += `  Código: ${item.codigo}\n`;
+    if (item.tieneDescuento) {
+      resumen += `  Precio: $${item.precio.toFixed(2)} (${item.descuento}% OFF)\n`;
+    } else {
+      resumen += `  Precio: $${item.precio.toFixed(2)}\n`;
+    }
+    resumen += '\n';
+  });
+
+  resumen += '------------------------\n';
+  resumen += `TOTAL: $${totalCarrito.toFixed(2)}\n`;
+
+  if (confirm(`${resumen}\n¿Confirmar pedido?`)) {
+    // Aquí se podría implementar envío de email o almacenamiento del pedido
+    alert('Pedido procesado exitosamente. En breve nos pondremos en contacto contigo.');
+
+    // Limpiar carrito después del pedido
+    carrito.forEach(item => {
+      const productIndex = articulos.findIndex(art => art.id === item.id);
+      if (productIndex >= 0) {
+        articulos[productIndex].faltante = false;
+      }
+    });
+
+    carrito = [];
+    actualizarCarrito();
+    guardar();
+    renderizar();
+  }
+}
 
 // Cambiar cantidad con botones +/-
 function cambiarCantidad(index, cambio) {
@@ -869,7 +1075,7 @@ function renderizarFiltrados(lista) {
             <i class="ph ph-minus"></i>
           </button>
           <button class="${art.faltante?'okBtn':'pedirBtn'}" onclick="marcarFaltanteIndex(${realIndex})">
-            <i class="ph ${art.faltante?'ph-check':'ph-shopping-cart'}"></i> ${art.faltante?"Disponible":"Pedir"}
+            <i class="ph ${art.faltante?'ph-check':'ph-shopping-cart'}"></i> ${art.faltante?"Disponible":(isAdmin() ? "Solo" : "Pedir")}
           </button>
           <button class="quantity-btn" onclick="cambiarCantidad(${realIndex}, 1)">
             <i class="ph ph-plus"></i>
@@ -1083,6 +1289,7 @@ window.onload = function() {
 
 function initializeApp() {
   cargarGrupos();
+  inicializarCarrito();
   renderizar();
   cargarConfiguracionCarga();
   

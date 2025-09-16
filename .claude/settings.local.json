@@ -3,7 +3,8 @@
     "allow": [
       "Bash(dir)",
       "Bash(dir:*)",
-      "Bash(start index.html)"
+      "Bash(start index.html)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
