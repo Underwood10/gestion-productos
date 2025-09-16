@@ -4,7 +4,7 @@ window.APP_CONFIG = {
     SUPABASE_URL: 'https://lalmhqdwerotieziyuvd.supabase.co',
     SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhbG1ocWR3ZXJvdGlleml5dXZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NTc5MTUsImV4cCI6MjA3MzUzMzkxNX0.fGkYr0zgPMqYecW_O939_Gv1K-vMGKPG_9Ft-HVVYJY',
     // EMAIL ADMINISTRADOR - Cambia por tu email personal
-    ADMIN_EMAIL: 'admin@tuempresa.com'
+    ADMIN_EMAIL: 'nicounderwood7@gmail.com'
 };
 
 // Ejemplo de cómo deberían verse:
