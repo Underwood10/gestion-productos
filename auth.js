@@ -267,11 +267,16 @@ function showAppBasedOnRole(role) {
   console.log('Mostrando app para rol:', role);
 
   if (role === 'admin') {
-    // Admin ve todo el sistema actual + panel de administración
+    // Admin ve todo el sistema actual + panel de administración en sidebar
     showMainApp();
-    if (document.getElementById('adminPanel')) {
-      document.getElementById('adminPanel').style.display = 'block';
-    }
+    setTimeout(() => {
+      // Mostrar panel de admin en el sidebar
+      const panelAdminSection = document.getElementById('panelAdminSection');
+      if (panelAdminSection) {
+        panelAdminSection.style.display = 'block';
+        cargarDatosAdmin();
+      }
+    }, 500);
 
   } else if (role === 'mayorista_autorizado') {
     // Cliente autorizado ve catálogo con precios
@@ -490,18 +495,229 @@ function filtrarProductosPublicos() {
   // TODO: Implementar filtros para vista pública
 }
 
-// Funciones para el panel de administración
-function toggleAdminSection(sectionId) {
-  const content = document.getElementById(sectionId);
-  const arrow = document.getElementById(`arrow-${sectionId}`);
+// ========== FUNCIONES DEL PANEL DE ADMINISTRACIÓN ==========
+async function cargarDatosAdmin() {
+  if (!isAdmin()) return;
 
-  if (content.style.display === 'none' || !content.style.display) {
-    content.style.display = 'block';
-    arrow.innerHTML = '<i class="ph ph-caret-up"></i>';
-  } else {
-    content.style.display = 'none';
-    arrow.innerHTML = '<i class="ph ph-caret-down"></i>';
+  try {
+    await cargarSolicitudesPendientes();
+    await cargarUsuariosAutorizados();
+    await cargarClientesParaPrecios();
+  } catch (error) {
+    console.error('Error cargando datos de admin:', error);
   }
+}
+
+async function cargarSolicitudesPendientes() {
+  try {
+    const { data, error } = await window.supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('estado', 'pendiente')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error cargando solicitudes:', error);
+      return;
+    }
+
+    const container = document.getElementById('listaSolicitudesPendientes');
+    const badge = document.getElementById('badgePendientes');
+
+    badge.textContent = data.length;
+
+    if (data.length === 0) {
+      container.innerHTML = '<p class="no-data">No hay solicitudes pendientes</p>';
+      return;
+    }
+
+    container.innerHTML = data.map(user => `
+      <div class="solicitud-item">
+        <div class="user-info">
+          <strong>${user.email}</strong>
+          <p>Empresa: ${user.empresa || 'No especificada'}</p>
+          <p>Teléfono: ${user.telefono || 'No especificado'}</p>
+          <p>Solicitado: ${new Date(user.created_at).toLocaleDateString()}</p>
+        </div>
+        <div class="actions">
+          <button onclick="autorizarUsuario('${user.id}')" class="btn-autorizar">
+            <i class="ph ph-check"></i> Autorizar
+          </button>
+          <button onclick="rechazarUsuario('${user.id}')" class="btn-rechazar">
+            <i class="ph ph-x"></i> Rechazar
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (error) {
+    console.error('Error en cargarSolicitudesPendientes:', error);
+  }
+}
+
+async function cargarUsuariosAutorizados() {
+  try {
+    const { data, error } = await window.supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('estado', 'autorizado')
+      .neq('role', 'admin')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error cargando usuarios autorizados:', error);
+      return;
+    }
+
+    const container = document.getElementById('listaUsuariosAutorizados');
+    const badge = document.getElementById('badgeAutorizados');
+
+    badge.textContent = data.length;
+
+    if (data.length === 0) {
+      container.innerHTML = '<p class="no-data">No hay usuarios autorizados</p>';
+      return;
+    }
+
+    container.innerHTML = data.map(user => `
+      <div class="usuario-item">
+        <div class="user-info">
+          <strong>${user.email}</strong>
+          <p>Empresa: ${user.empresa}</p>
+          <p>Autorizado: ${new Date(user.authorized_at || user.created_at).toLocaleDateString()}</p>
+        </div>
+        <div class="actions">
+          <button onclick="revocarAutorizacion('${user.id}')" class="btn-rechazar">
+            <i class="ph ph-prohibition"></i> Revocar
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (error) {
+    console.error('Error en cargarUsuariosAutorizados:', error);
+  }
+}
+
+async function autorizarUsuario(userId) {
+  if (!confirm('¿Autorizar a este usuario para ver precios mayoristas?')) return;
+
+  try {
+    const { error } = await window.supabase
+      .from('user_profiles')
+      .update({
+        estado: 'autorizado',
+        role: 'mayorista_autorizado',
+        puede_ver_precios: true,
+        authorized_by: currentUser.id,
+        authorized_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error autorizando usuario:', error);
+      alert('Error al autorizar usuario');
+      return;
+    }
+
+    alert('Usuario autorizado correctamente');
+    await cargarSolicitudesPendientes();
+    await cargarUsuariosAutorizados();
+
+  } catch (error) {
+    console.error('Error en autorizarUsuario:', error);
+    alert('Error al autorizar usuario');
+  }
+}
+
+async function rechazarUsuario(userId) {
+  if (!confirm('¿Rechazar la solicitud de este usuario?')) return;
+
+  try {
+    const { error } = await window.supabase
+      .from('user_profiles')
+      .update({
+        estado: 'rechazado',
+        role: 'solicitante'
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error rechazando usuario:', error);
+      alert('Error al rechazar usuario');
+      return;
+    }
+
+    alert('Usuario rechazado');
+    await cargarSolicitudesPendientes();
+
+  } catch (error) {
+    console.error('Error en rechazarUsuario:', error);
+  }
+}
+
+async function revocarAutorizacion(userId) {
+  if (!confirm('¿Revocar el acceso de este usuario?')) return;
+
+  try {
+    const { error } = await window.supabase
+      .from('user_profiles')
+      .update({
+        estado: 'rechazado',
+        role: 'solicitante',
+        puede_ver_precios: false
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error revocando autorización:', error);
+      alert('Error al revocar autorización');
+      return;
+    }
+
+    alert('Autorización revocada');
+    await cargarUsuariosAutorizados();
+
+  } catch (error) {
+    console.error('Error en revocarAutorizacion:', error);
+  }
+}
+
+async function cargarClientesParaPrecios() {
+  try {
+    const { data, error } = await window.supabase
+      .from('user_profiles')
+      .select('id, email, empresa')
+      .eq('estado', 'autorizado')
+      .neq('role', 'admin');
+
+    if (error) {
+      console.error('Error cargando clientes:', error);
+      return;
+    }
+
+    const select = document.getElementById('clienteSeleccionado');
+    select.innerHTML = '<option value="">Seleccionar cliente...</option>';
+
+    data.forEach(cliente => {
+      select.innerHTML += `<option value="${cliente.id}">${cliente.email} - ${cliente.empresa}</option>`;
+    });
+
+  } catch (error) {
+    console.error('Error en cargarClientesParaPrecios:', error);
+  }
+}
+
+function cargarPreciosCliente() {
+  const clienteId = document.getElementById('clienteSeleccionado').value;
+  const panel = document.getElementById('preciosClientePanel');
+
+  if (!clienteId) {
+    panel.innerHTML = '';
+    return;
+  }
+
+  panel.innerHTML = '<p>Función de precios personalizados - Por implementar</p>';
 }
 
 function updateUserInfo() {
