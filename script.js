@@ -188,7 +188,6 @@ async function agregar(){
   const cantidad = configuracionCarga.cantidad ? (parseInt(document.getElementById("cantidad").value) || 0) : 0;
   const grupo = configuracionCarga.grupo ? document.getElementById("grupo").value : "";
   const archivo = configuracionCarga.foto ? document.getElementById("foto").files[0] : null;
-  const precioPublico = parseFloat(document.getElementById("precioPublico").value) || 0;
   const precioMayorista = parseFloat(document.getElementById("precioMayorista").value) || 0;
   
   // Validar solo campos habilitados y obligatorios según configuración
@@ -196,7 +195,6 @@ async function agregar(){
   if(configuracionCarga.nombre && !document.getElementById("nombre").value.trim()) camposObligatorios.push("Nombre");
   if(configuracionCarga.marca && !document.getElementById("marca").value.trim()) camposObligatorios.push("Marca");
   if(configuracionCarga.codigo && !document.getElementById("codigo").value.trim()) camposObligatorios.push("Código");
-  if(!precioPublico || precioPublico <= 0) camposObligatorios.push("Precio Minorista");
   if(!precioMayorista || precioMayorista <= 0) camposObligatorios.push("Precio Mayorista");
   // Grupo y foto no son campos obligatorios por defecto
 
@@ -234,7 +232,6 @@ async function agregar(){
       cantidad,
       grupo,
       foto: fotoBase64,
-      precio_publico: precioPublico,
       precio_mayorista: precioMayorista,
       faltante: false,
       visible: true
@@ -274,7 +271,6 @@ function limpiarFormulario() {
   document.getElementById("cantidad").value="";
   document.getElementById("grupo").value="";
   document.getElementById("foto").value="";
-  document.getElementById("precioPublico").value="";
   document.getElementById("precioMayorista").value="";
   
   // Resetear el texto del archivo
@@ -306,7 +302,6 @@ function abrirEditar(index){
   document.getElementById("editCodigo").value=art.codigo;
   document.getElementById("editCantidad").value=art.cantidad || 0;
   document.getElementById("editGrupo").value=art.grupo || "";
-  document.getElementById("editPrecioPublico").value=art.precio_publico || 0;
   document.getElementById("editPrecioMayorista").value=art.precio_mayorista || 0;
   document.getElementById("editFoto").src=art.foto;
   document.getElementById("editArchivo").value="";
@@ -318,12 +313,11 @@ async function guardarEdicion(){
   const nuevoCodigo=document.getElementById("editCodigo").value.trim();
   const nuevaCantidad=parseInt(document.getElementById("editCantidad").value) || 0;
   const nuevoGrupo=document.getElementById("editGrupo").value;
-  const nuevoPrecioPublico=parseFloat(document.getElementById("editPrecioPublico").value) || 0;
   const nuevoPrecioMayorista=parseFloat(document.getElementById("editPrecioMayorista").value) || 0;
   const archivo=document.getElementById("editArchivo").files[0];
 
   if(!nuevoNombre||!nuevaMarca||!nuevoCodigo){alert("Completa todos los campos obligatorios");return;}
-  if(nuevoPrecioPublico <= 0 || nuevoPrecioMayorista <= 0){alert("Los precios deben ser mayores a 0");return;}
+  if(nuevoPrecioMayorista <= 0){alert("El precio mayorista debe ser mayor a 0");return;}
 
   // Actualizar datos locales
   articulos[indiceEditar].nombre=nuevoNombre;
@@ -331,7 +325,6 @@ async function guardarEdicion(){
   articulos[indiceEditar].codigo=nuevoCodigo;
   articulos[indiceEditar].cantidad=nuevaCantidad;
   articulos[indiceEditar].grupo=nuevoGrupo;
-  articulos[indiceEditar].precio_publico=nuevoPrecioPublico;
   articulos[indiceEditar].precio_mayorista=nuevoPrecioMayorista;
 
   // Actualizar en Supabase
@@ -341,7 +334,6 @@ async function guardarEdicion(){
     codigo: nuevoCodigo,
     cantidad: nuevaCantidad,
     grupo: nuevoGrupo,
-    precio_publico: nuevoPrecioPublico,
     precio_mayorista: nuevoPrecioMayorista
   };
 
