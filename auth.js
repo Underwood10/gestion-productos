@@ -105,9 +105,11 @@ async function register() {
         // Crear perfil de usuario automáticamente
         try {
           await createUserProfileOnRegister(data.user, name, empresa, telefono);
+          console.log('Perfil creado exitosamente');
         } catch (profileError) {
           console.error('Error creando perfil de usuario:', profileError);
-          showAuthMessage('Usuario creado pero error configurando perfil. Contacta soporte.', 'warning');
+          showAuthMessage('Usuario creado pero error configurando perfil: ' + profileError.message, 'warning');
+          return; // Salir aquí para no continuar
         }
 
         if (!data.user.email_confirmed_at) {
@@ -143,6 +145,19 @@ async function createUserProfileOnRegister(user, name, empresa, telefono) {
       isAdmin: isAdminUser
     });
 
+    // Primero verificar si la tabla existe
+    const { data: testData, error: testError } = await window.supabase
+      .from('user_profiles')
+      .select('count')
+      .limit(1);
+
+    if (testError) {
+      console.error('La tabla user_profiles no existe o no tiene permisos:', testError);
+      throw new Error('Tabla user_profiles no accesible: ' + testError.message);
+    }
+
+    console.log('Tabla user_profiles accesible, insertando...');
+
     const { data, error } = await window.supabase
       .from('user_profiles')
       .insert([{
@@ -161,7 +176,7 @@ async function createUserProfileOnRegister(user, name, empresa, telefono) {
       console.error('Código de error:', error.code);
       console.error('Mensaje:', error.message);
       console.error('Detalles:', error.details);
-      throw error; // Propagar el error para ver el mensaje completo
+      throw new Error('Error insertando perfil: ' + error.message);
     } else {
       console.log('Perfil creado correctamente:', data);
     }

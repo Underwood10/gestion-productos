@@ -1162,6 +1162,19 @@ function toggleEditMode() {
   }
 }
 
+// Función para cargar grupos en el formulario
+function cargarGruposEnFormulario() {
+  const selectGrupo = document.getElementById("grupo");
+  if (selectGrupo) {
+    selectGrupo.innerHTML = '<option value="">Seleccionar grupo...</option>';
+    grupos.forEach(grupo => {
+      if (grupo !== "Sin grupo") {
+        selectGrupo.innerHTML += `<option value="${grupo}">${grupo}</option>`;
+      }
+    });
+  }
+}
+
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
   renderizar(); // Cargar artículos (solo visibles por defecto)
