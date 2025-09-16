@@ -118,12 +118,12 @@ function renderizar(lista=null){
     });
   const contenedor = document.getElementById("listaArticulos");
   contenedor.innerHTML="";
-  
+
   mostrar.forEach((art,originalIndex)=>{
     const realIndex = articulos.findIndex(a => a === art);
     const stockBajo = (art.cantidad !== undefined && art.cantidad <= stockMinimo);
     const esPedir = art.faltante || stockBajo;
-    
+
     const botonesEdicion = modoEdicion ? `
       <div class="articulo-actions">
         <button class="action-btn edit-btn" onclick="abrirEditar(${realIndex})" title="Editar">
@@ -132,22 +132,37 @@ function renderizar(lista=null){
         <button class="action-btn delete-btn" onclick="abrirEliminar(${realIndex})" title="Eliminar">
           <i class="ph ph-trash"></i>
         </button>
-        <button class="action-btn visibility-btn ${art.visible !== false ? 'visible' : 'hidden'}" 
-                onclick="toggleVisibilidad(${realIndex})" 
+        <button class="action-btn visibility-btn ${art.visible !== false ? 'visible' : 'hidden'}"
+                onclick="toggleVisibilidad(${realIndex})"
                 title="${art.visible !== false ? 'Ocultar' : 'Mostrar'}">
           <i class="ph ${art.visible !== false ? 'ph-eye' : 'ph-eye-slash'}"></i>
         </button>
       </div>
     ` : '';
-    
+
+    // Calcular precio con descuentos
+    const precioInfo = calcularPrecioConDescuento(art);
+    const tieneDescuento = precioInfo.tieneDescuento;
+
     contenedor.innerHTML += `
       <div class="producto ${esPedir?'pedir':''} ${modoEdicion?'edit-mode':''}">
         ${botonesEdicion}
         <img src="${art.foto}" alt="Foto">
-        <h3>${art.nombre}</h3>
-        <p><b>Stock:</b> 
-          <span class="stock-display stock-cantidad ${stockBajo?'stock-bajo':''}" onclick="editarStockInline(${realIndex})" style="cursor: pointer; user-select: none;" title="Clic para editar stock" id="stock-${realIndex}">${art.cantidad !== undefined ? art.cantidad : 'No definido'}</span>
-        </p>
+        <div class="producto-info">
+          <h3>${art.nombre}</h3>
+          <p class="marca"><strong>${art.marca}</strong></p>
+          <div class="precio-container">
+            ${tieneDescuento ?
+              `<span class="precio-anterior">$${(art.precio_publico || 0).toFixed(2)}</span>
+               <span class="precio-actual">$${precioInfo.precio.toFixed(2)}</span>
+               <span class="descuento-badge">${precioInfo.descuento}% OFF</span>` :
+              `<span class="precio-actual">$${(art.precio_publico || 0).toFixed(2)}</span>`
+            }
+          </div>
+          <p><b>Stock:</b>
+            <span class="stock-display stock-cantidad ${stockBajo?'stock-bajo':''}" onclick="editarStockInline(${realIndex})" style="cursor: pointer; user-select: none;" title="Clic para editar stock" id="stock-${realIndex}">${art.cantidad !== undefined ? art.cantidad : 'No definido'}</span>
+          </p>
+        </div>
         <div class="acciones-con-cantidad">
           <button class="quantity-btn minus" onclick="cambiarCantidad(${realIndex}, -1)">
             <i class="ph ph-minus"></i>
