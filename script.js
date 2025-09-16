@@ -44,6 +44,9 @@ async function reloadUserData() {
         
         // Recargar la interfaz
         cargarGrupos();
+        cargarDescuentosDesdeStorage();
+        cargarMarcasEnSelect();
+        actualizarListaDescuentosActivos();
         renderizar();
         cargarConfiguracionCarga();
         const cantidadMinima = document.getElementById("cantidadMinima");
@@ -170,14 +173,18 @@ async function agregar(){
   const cantidad = configuracionCarga.cantidad ? (parseInt(document.getElementById("cantidad").value) || 0) : 0;
   const grupo = configuracionCarga.grupo ? document.getElementById("grupo").value : "";
   const archivo = configuracionCarga.foto ? document.getElementById("foto").files[0] : null;
+  const precioPublico = parseFloat(document.getElementById("precioPublico").value) || 0;
+  const precioMayorista = parseFloat(document.getElementById("precioMayorista").value) || 0;
   
   // Validar solo campos habilitados y obligatorios según configuración
   const camposObligatorios = [];
   if(configuracionCarga.nombre && !document.getElementById("nombre").value.trim()) camposObligatorios.push("Nombre");
   if(configuracionCarga.marca && !document.getElementById("marca").value.trim()) camposObligatorios.push("Marca");
   if(configuracionCarga.codigo && !document.getElementById("codigo").value.trim()) camposObligatorios.push("Código");
+  if(!precioPublico || precioPublico <= 0) camposObligatorios.push("Precio Público");
+  if(!precioMayorista || precioMayorista <= 0) camposObligatorios.push("Precio Mayorista");
   // Grupo y foto no son campos obligatorios por defecto
-  
+
   if(camposObligatorios.length > 0) {
     return alert("Completa los siguientes campos obligatorios: " + camposObligatorios.join(", "));
   }
@@ -212,6 +219,8 @@ async function agregar(){
       cantidad,
       grupo,
       foto: fotoBase64,
+      precio_publico: precioPublico,
+      precio_mayorista: precioMayorista,
       faltante: false,
       visible: true
     };
@@ -250,6 +259,8 @@ function limpiarFormulario() {
   document.getElementById("cantidad").value="";
   document.getElementById("grupo").value="";
   document.getElementById("foto").value="";
+  document.getElementById("precioPublico").value="";
+  document.getElementById("precioMayorista").value="";
   
   // Resetear el texto del archivo
   const textSpan = document.querySelector('.file-input-text');
@@ -1172,6 +1183,140 @@ function cargarGruposEnFormulario() {
         selectGrupo.innerHTML += `<option value="${grupo}">${grupo}</option>`;
       }
     });
+  }
+}
+
+// ========== FUNCIONES DE DESCUENTOS POR MARCA ==========
+let descuentosPorMarca = {}; // {marca: porcentaje}
+
+function calcularPrecioConDescuento(producto) {
+  const precioBase = producto.precio_publico || 0;
+  const descuentoMarca = descuentosPorMarca[producto.marca] || 0;
+
+  if (descuentoMarca > 0) {
+    const precioConDescuento = precioBase * (1 - descuentoMarca / 100);
+    return {
+      precio: precioConDescuento,
+      descuento: descuentoMarca,
+      tieneDescuento: true
+    };
+  }
+
+  return {
+    precio: precioBase,
+    descuento: 0,
+    tieneDescuento: false
+  };
+}
+
+async function cargarMarcasEnSelect() {
+  const selectMarca = document.getElementById("marcaDescuento");
+  if (!selectMarca) return;
+
+  // Obtener marcas únicas de los productos
+  const marcasUnicas = [...new Set(articulos.map(art => art.marca))].filter(marca => marca && marca !== "Sin marca");
+
+  selectMarca.innerHTML = '<option value="">Seleccionar marca...</option>';
+  marcasUnicas.forEach(marca => {
+    selectMarca.innerHTML += `<option value="${marca}">${marca}</option>`;
+  });
+}
+
+async function aplicarDescuentoPorMarca() {
+  const marca = document.getElementById("marcaDescuento").value;
+  const porcentaje = parseInt(document.getElementById("porcentajeDescuento").value) || 0;
+
+  if (!marca) {
+    alert("Selecciona una marca");
+    return;
+  }
+
+  if (porcentaje < 0 || porcentaje > 100) {
+    alert("El porcentaje debe estar entre 0 y 100");
+    return;
+  }
+
+  // Aplicar descuento
+  descuentosPorMarca[marca] = porcentaje;
+
+  // Guardar en localStorage
+  localStorage.setItem("descuentosPorMarca_" + userId, JSON.stringify(descuentosPorMarca));
+
+  alert(`Descuento del ${porcentaje}% aplicado a la marca ${marca}`);
+
+  // Actualizar vista
+  renderizar();
+  actualizarListaDescuentosActivos();
+
+  // Limpiar formulario
+  document.getElementById("marcaDescuento").value = "";
+  document.getElementById("porcentajeDescuento").value = "";
+}
+
+async function eliminarDescuentoPorMarca() {
+  const marca = document.getElementById("marcaDescuento").value;
+
+  if (!marca) {
+    alert("Selecciona una marca");
+    return;
+  }
+
+  if (descuentosPorMarca[marca]) {
+    delete descuentosPorMarca[marca];
+
+    // Guardar en localStorage
+    localStorage.setItem("descuentosPorMarca_" + userId, JSON.stringify(descuentosPorMarca));
+
+    alert(`Descuento eliminado para la marca ${marca}`);
+
+    // Actualizar vista
+    renderizar();
+    actualizarListaDescuentosActivos();
+
+    // Limpiar formulario
+    document.getElementById("marcaDescuento").value = "";
+    document.getElementById("porcentajeDescuento").value = "";
+  } else {
+    alert("Esta marca no tiene descuento aplicado");
+  }
+}
+
+function actualizarListaDescuentosActivos() {
+  const container = document.getElementById("descuentosActivosList");
+  if (!container) return;
+
+  const descuentos = Object.entries(descuentosPorMarca);
+
+  if (descuentos.length === 0) {
+    container.innerHTML = '<p class="no-descuentos">No hay descuentos activos</p>';
+    return;
+  }
+
+  container.innerHTML = descuentos.map(([marca, porcentaje]) => `
+    <div class="descuento-activo">
+      <span><strong>${marca}</strong> - ${porcentaje}% OFF</span>
+      <button onclick="eliminarDescuentoMarca('${marca}')" class="btn-remove-descuento">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+function eliminarDescuentoMarca(marca) {
+  if (confirm(`¿Eliminar descuento de ${marca}?`)) {
+    delete descuentosPorMarca[marca];
+    localStorage.setItem("descuentosPorMarca_" + userId, JSON.stringify(descuentosPorMarca));
+    renderizar();
+    actualizarListaDescuentosActivos();
+  }
+}
+
+function cargarDescuentosDesdeStorage() {
+  if (userId) {
+    const descuentosGuardados = localStorage.getItem("descuentosPorMarca_" + userId);
+    if (descuentosGuardados) {
+      descuentosPorMarca = JSON.parse(descuentosGuardados);
+    }
   }
 }
 
