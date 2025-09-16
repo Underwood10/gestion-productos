@@ -153,10 +153,10 @@ function renderizar(lista=null){
           <p class="marca"><strong>${art.marca}</strong></p>
           <div class="precio-container">
             ${tieneDescuento ?
-              `<span class="precio-anterior">$${(art.precio_publico || 0).toFixed(2)}</span>
-               <span class="precio-actual">$${precioInfo.precio.toFixed(2)}</span>
+              `<span class="precio-anterior">$${(art.precio_mayorista || 0).toFixed(2)}</span>
+               <span class="precio-actual">$${calcularPrecioMayoristaConDescuento(art).toFixed(2)}</span>
                <span class="descuento-badge">${precioInfo.descuento}% OFF</span>` :
-              `<span class="precio-actual">$${(art.precio_publico || 0).toFixed(2)}</span>`
+              `<span class="precio-actual">$${(art.precio_mayorista || 0).toFixed(2)}</span>`
             }
           </div>
           <p><b>Stock:</b>
@@ -196,7 +196,7 @@ async function agregar(){
   if(configuracionCarga.nombre && !document.getElementById("nombre").value.trim()) camposObligatorios.push("Nombre");
   if(configuracionCarga.marca && !document.getElementById("marca").value.trim()) camposObligatorios.push("Marca");
   if(configuracionCarga.codigo && !document.getElementById("codigo").value.trim()) camposObligatorios.push("Código");
-  if(!precioPublico || precioPublico <= 0) camposObligatorios.push("Precio Público");
+  if(!precioPublico || precioPublico <= 0) camposObligatorios.push("Precio Minorista");
   if(!precioMayorista || precioMayorista <= 0) camposObligatorios.push("Precio Mayorista");
   // Grupo y foto no son campos obligatorios por defecto
 
@@ -1236,11 +1236,11 @@ function cargarGruposEnFormulario() {
 let descuentosPorMarca = {}; // {marca: porcentaje}
 
 function calcularPrecioConDescuento(producto) {
-  const precioBase = producto.precio_publico || 0;
+  const precioBaseMayorista = producto.precio_mayorista || 0;
   const descuentoMarca = descuentosPorMarca[producto.marca] || 0;
 
   if (descuentoMarca > 0) {
-    const precioConDescuento = precioBase * (1 - descuentoMarca / 100);
+    const precioConDescuento = precioBaseMayorista * (1 - descuentoMarca / 100);
     return {
       precio: precioConDescuento,
       descuento: descuentoMarca,
@@ -1249,10 +1249,21 @@ function calcularPrecioConDescuento(producto) {
   }
 
   return {
-    precio: precioBase,
+    precio: precioBaseMayorista,
     descuento: 0,
     tieneDescuento: false
   };
+}
+
+function calcularPrecioMayoristaConDescuento(producto) {
+  const precioBaseMayorista = producto.precio_mayorista || 0;
+  const descuentoMarca = descuentosPorMarca[producto.marca] || 0;
+
+  if (descuentoMarca > 0) {
+    return precioBaseMayorista * (1 - descuentoMarca / 100);
+  }
+
+  return precioBaseMayorista;
 }
 
 async function cargarMarcasEnSelect() {
