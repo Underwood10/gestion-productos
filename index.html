@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <title>Gestión de Artículos - Multi Local</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<!-- Phosphor Icons - múltiples CDNs para mayor compatibilidad -->
+<script src="https://unpkg.com/@phosphor-icons/web@2.0.3/dist/icons.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.0.3/dist/icons.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -532,6 +535,47 @@
 <script src="auth.js"></script>
 <script src="database.js"></script>
 <script src="script.js"></script>
+
+<!-- Script para inicializar iconos -->
+<script>
+// Asegurar que los iconos Phosphor se carguen correctamente
+document.addEventListener('DOMContentLoaded', function() {
+  // Intentar inicializar Phosphor Icons
+  if (typeof window.phosphor !== 'undefined') {
+    window.phosphor.fill();
+  }
+
+  // Fallback: Si los iconos no cargan, usar Unicode
+  setTimeout(() => {
+    const icons = document.querySelectorAll('i[class*="ph-"]');
+    icons.forEach(icon => {
+      if (icon.innerHTML === '' || window.getComputedStyle(icon).fontSize === '16px') {
+        // El icono no se cargó, usar fallback Unicode
+        const className = icon.className;
+        if (className.includes('ph-package')) icon.innerHTML = '📦';
+        else if (className.includes('ph-envelope')) icon.innerHTML = '✉️';
+        else if (className.includes('ph-lock')) icon.innerHTML = '🔒';
+        else if (className.includes('ph-user')) icon.innerHTML = '👤';
+        else if (className.includes('ph-buildings')) icon.innerHTML = '🏢';
+        else if (className.includes('ph-phone')) icon.innerHTML = '📞';
+        else if (className.includes('ph-storefront')) icon.innerHTML = '🏪';
+        else if (className.includes('ph-sign-out')) icon.innerHTML = '🚪';
+        else if (className.includes('ph-magnifying-glass')) icon.innerHTML = '🔍';
+        else if (className.includes('ph-shopping-cart')) icon.innerHTML = '🛒';
+        else if (className.includes('ph-file-text')) icon.innerHTML = '📄';
+        else if (className.includes('ph-clock')) icon.innerHTML = '🕐';
+        else if (className.includes('ph-crown')) icon.innerHTML = '👑';
+        else if (className.includes('ph-check-circle')) icon.innerHTML = '✅';
+        else if (className.includes('ph-currency-dollar')) icon.innerHTML = '💰';
+        else if (className.includes('ph-caret-down')) icon.innerHTML = '▼';
+        else if (className.includes('ph-caret-up')) icon.innerHTML = '▲';
+        else if (className.includes('ph-image')) icon.innerHTML = '🖼️';
+        else icon.innerHTML = '•'; // fallback genérico
+      }
+    });
+  }, 1000);
+});
+</script>
 </body>
 </html>
 
