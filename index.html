@@ -69,6 +69,22 @@
       </div>
 
       <div class="form-group">
+        <label for="registerEmpresa">
+          <i class="ph ph-buildings"></i>
+          Empresa
+        </label>
+        <input type="text" id="registerEmpresa" placeholder="Nombre de tu empresa" required>
+      </div>
+
+      <div class="form-group">
+        <label for="registerTelefono">
+          <i class="ph ph-phone"></i>
+          Teléfono
+        </label>
+        <input type="tel" id="registerTelefono" placeholder="Tu número de teléfono" required>
+      </div>
+
+      <div class="form-group">
         <label for="registerPassword">
           <i class="ph ph-lock"></i>
           Contraseña
@@ -77,7 +93,7 @@
       </div>
 
       <button type="submit" id="registerBtn" class="auth-btn">
-        <span class="btn-text">Crear Cuenta</span>
+        <span class="btn-text">Solicitar Acceso</span>
         <div class="btn-loader" style="display: none;">
           <i class="ph ph-circle-notch"></i>
         </div>
@@ -427,6 +443,57 @@
 
 <!-- OVERLAY -->
 <div id="overlay" class="overlay" onclick="cerrarConfiguracion()"></div>
+
+<!-- PANEL DE ADMINISTRACIÓN -->
+<div id="adminPanel" style="display: none;">
+  <div class="admin-container">
+    <div class="admin-header">
+      <h2><i class="ph ph-crown"></i> Panel de Administración</h2>
+      <p>Gestión de usuarios y permisos</p>
+    </div>
+
+    <!-- Solicitudes Pendientes -->
+    <div class="admin-section">
+      <div class="section-header-admin" onclick="toggleAdminSection('solicitudesPendientes')">
+        <h3><i class="ph ph-clock"></i> Solicitudes Pendientes</h3>
+        <span class="badge-count" id="badgePendientes">0</span>
+        <span class="toggle-arrow-admin" id="arrow-solicitudesPendientes"><i class="ph ph-caret-down"></i></span>
+      </div>
+      <div id="solicitudesPendientes" class="section-content-admin">
+        <div id="listaSolicitudesPendientes" class="solicitudes-grid"></div>
+      </div>
+    </div>
+
+    <!-- Usuarios Autorizados -->
+    <div class="admin-section">
+      <div class="section-header-admin" onclick="toggleAdminSection('usuariosAutorizados')">
+        <h3><i class="ph ph-check-circle"></i> Mayoristas Autorizados</h3>
+        <span class="badge-count" id="badgeAutorizados">0</span>
+        <span class="toggle-arrow-admin" id="arrow-usuariosAutorizados"><i class="ph ph-caret-down"></i></span>
+      </div>
+      <div id="usuariosAutorizados" class="section-content-admin">
+        <div id="listaUsuariosAutorizados" class="usuarios-grid"></div>
+      </div>
+    </div>
+
+    <!-- Gestión de Precios -->
+    <div class="admin-section">
+      <div class="section-header-admin" onclick="toggleAdminSection('gestionPrecios')">
+        <h3><i class="ph ph-currency-dollar"></i> Gestión de Precios</h3>
+        <span class="toggle-arrow-admin" id="arrow-gestionPrecios"><i class="ph ph-caret-down"></i></span>
+      </div>
+      <div id="gestionPrecios" class="section-content-admin">
+        <div class="precio-config">
+          <label for="clienteSeleccionado">Seleccionar Cliente:</label>
+          <select id="clienteSeleccionado" onchange="cargarPreciosCliente()">
+            <option value="">Seleccionar cliente autorizado...</option>
+          </select>
+        </div>
+        <div id="preciosClientePanel" class="precios-panel"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 </div> <!-- Cierre de mainApp -->
 
