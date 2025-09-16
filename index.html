@@ -369,6 +369,11 @@
     <select id="editGrupo">
       <option value="">Seleccionar grupo</option>
     </select>
+    <div class="edit-precios">
+      <label>Precios:</label>
+      <input type="number" id="editPrecioPublico" placeholder="Precio Público" step="0.01" min="0">
+      <input type="number" id="editPrecioMayorista" placeholder="Precio Mayorista" step="0.01" min="0">
+    </div>
     <input type="file" id="editArchivo" accept="image/*">
     <div style="text-align:right;">
       <button onclick="guardarEdicion()">Guardar</button>

@@ -306,31 +306,62 @@ function abrirEditar(index){
   document.getElementById("editCodigo").value=art.codigo;
   document.getElementById("editCantidad").value=art.cantidad || 0;
   document.getElementById("editGrupo").value=art.grupo || "";
+  document.getElementById("editPrecioPublico").value=art.precio_publico || 0;
+  document.getElementById("editPrecioMayorista").value=art.precio_mayorista || 0;
   document.getElementById("editFoto").src=art.foto;
   document.getElementById("editArchivo").value="";
   document.getElementById("modalEditar").style.display="flex";
 }
-function guardarEdicion(){
+async function guardarEdicion(){
   const nuevoNombre=capitalizar(document.getElementById("editNombre").value);
   const nuevaMarca=capitalizar(document.getElementById("editMarca").value);
   const nuevoCodigo=document.getElementById("editCodigo").value.trim();
   const nuevaCantidad=parseInt(document.getElementById("editCantidad").value) || 0;
   const nuevoGrupo=document.getElementById("editGrupo").value;
+  const nuevoPrecioPublico=parseFloat(document.getElementById("editPrecioPublico").value) || 0;
+  const nuevoPrecioMayorista=parseFloat(document.getElementById("editPrecioMayorista").value) || 0;
   const archivo=document.getElementById("editArchivo").files[0];
+
   if(!nuevoNombre||!nuevaMarca||!nuevoCodigo){alert("Completa todos los campos obligatorios");return;}
+  if(nuevoPrecioPublico <= 0 || nuevoPrecioMayorista <= 0){alert("Los precios deben ser mayores a 0");return;}
+
+  // Actualizar datos locales
   articulos[indiceEditar].nombre=nuevoNombre;
   articulos[indiceEditar].marca=nuevaMarca;
   articulos[indiceEditar].codigo=nuevoCodigo;
   articulos[indiceEditar].cantidad=nuevaCantidad;
   articulos[indiceEditar].grupo=nuevoGrupo;
+  articulos[indiceEditar].precio_publico=nuevoPrecioPublico;
+  articulos[indiceEditar].precio_mayorista=nuevoPrecioMayorista;
+
+  // Actualizar en Supabase
+  const cambios = {
+    nombre: nuevoNombre,
+    marca: nuevaMarca,
+    codigo: nuevoCodigo,
+    cantidad: nuevaCantidad,
+    grupo: nuevoGrupo,
+    precio_publico: nuevoPrecioPublico,
+    precio_mayorista: nuevoPrecioMayorista
+  };
+
   if(archivo){
     const lector=new FileReader();
-    lector.onload=e=>{
+    lector.onload=async e=>{
       articulos[indiceEditar].foto=e.target.result;
-      guardar(); renderizar(); cerrarModal();
+      cambios.foto = e.target.result;
+      await actualizarProductoDB(articulos[indiceEditar].id, cambios);
+      await guardar();
+      renderizar();
+      cerrarModal();
     };
     lector.readAsDataURL(archivo);
-  }else{guardar(); renderizar(); cerrarModal();}
+  }else{
+    await actualizarProductoDB(articulos[indiceEditar].id, cambios);
+    await guardar();
+    renderizar();
+    cerrarModal();
+  }
 }
 function cerrarModal(){ document.getElementById("modalEditar").style.display="none"; }
 
