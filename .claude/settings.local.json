@@ -6,7 +6,8 @@
       "Bash(start index.html)",
       "Bash(git add:*)",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(start \"C:\\Users\\nicou\\OneDrive\\Escritorio\\gestion_productos\\index.html\")"
     ],
     "deny": [],
     "ask": []

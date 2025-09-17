@@ -2,12 +2,23 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Gestión de Artículos - Multi Local</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Productos - Sistema Profesional</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Excel Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <!-- Phosphor Icons - múltiples CDNs para mayor compatibilidad -->
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3/dist/icons.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.0.3/dist/icons.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+
+<!-- Styles -->
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -108,14 +119,33 @@
 <!-- APP PRINCIPAL -->
 <div id="mainApp" style="display: none;">
 
-<!-- MENU HAMBURGUESA -->
-<div class="hamburger-menu-left" onclick="abrirConfiguracion()">
-  <div class="line"></div>
-  <div class="line"></div>
-  <div class="line"></div>
+<!-- HEADER PRINCIPAL CON CARD HORIZONTAL -->
+<div class="main-header">
+  <div class="header-card">
+    <div class="header-left">
+      <div class="hamburger-menu-left" onclick="abrirConfiguracion()">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+      <div class="header-title">
+        <h1><i class="ph ph-package"></i> Gestión de Productos</h1>
+        <div class="header-subtitle">Sistema de inventario profesional</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-info">
+        <div class="user-avatar">
+          <i class="ph ph-user"></i>
+        </div>
+        <span id="userInfo">Usuario</span>
+      </div>
+    </div>
+  </div>
 </div>
 
-<h1><i class="ph ph-package"></i> Mis Productos <span id="userInfo"></span></h1>
+<!-- CONTENEDOR PRINCIPAL -->
+<div class="main-container">
 
 <!-- CARRITO DE COMPRAS (solo para usuarios no admin) -->
 <div id="carrito-display" class="carrito-display" style="display: none;">
@@ -579,7 +609,7 @@
 <!-- OVERLAY -->
 <div id="overlay" class="overlay" onclick="cerrarConfiguracion()"></div>
 
-
+</div> <!-- Cierre de main-container -->
 </div> <!-- Cierre de mainApp -->
 
 <!-- MODAL EXCEL INFO -->

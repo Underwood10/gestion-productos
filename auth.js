@@ -822,7 +822,19 @@ function updateUserInfo() {
   const userInfoElement = document.getElementById('userInfo');
   if (userInfoElement && currentUser) {
     const displayName = currentUser.user_metadata?.full_name || currentUser.email;
-    userInfoElement.innerHTML = `(${displayName}) <button onclick="logout()" style="margin-left: 10px; padding: 2px 8px; font-size: 0.8em; background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer;" title="Cerrar sesión"><i class="ph ph-sign-out"></i></button>`;
+    userInfoElement.textContent = displayName;
+
+    // Agregar botón de logout si no existe
+    const userInfoContainer = userInfoElement.parentElement;
+    let logoutBtn = userInfoContainer.querySelector('.user-logout-btn');
+    if (!logoutBtn) {
+      logoutBtn = document.createElement('button');
+      logoutBtn.className = 'user-logout-btn';
+      logoutBtn.innerHTML = '<i class="ph ph-sign-out"></i>';
+      logoutBtn.onclick = logout;
+      logoutBtn.title = 'Cerrar sesión';
+      userInfoContainer.appendChild(logoutBtn);
+    }
   }
 }
 
