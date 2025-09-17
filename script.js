@@ -106,6 +106,15 @@ function capitalizar(texto) {
   return texto.split(" ").map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(" ");
 }
 
+// Función para obtener clase de stock
+function getStockClass(cantidad) {
+  if (cantidad === undefined || cantidad === null) return 'stock-sin';
+  if (cantidad === 0) return 'stock-sin';
+  if (cantidad <= stockMinimo) return 'stock-bajo';
+  if (cantidad <= stockMinimo * 2) return 'stock-medio';
+  return 'stock-alto';
+}
+
 // Renderizar
 function renderizar(lista=null){
   const mostrar = lista || [...articulos]
@@ -146,36 +155,53 @@ function renderizar(lista=null){
     const tieneDescuento = precioInfo.tieneDescuento;
 
     contenedor.innerHTML += `
-      <div class="producto ${esPedir?'pedir':''} ${modoEdicion?'edit-mode':''}">
-        ${botonesEdicion}
-        <img src="${art.foto}" alt="Foto">
+      <div class="producto-item ${esPedir?'producto-marcado':''} ${modoEdicion?'edit-mode':''} ${art.visible === false ? 'producto-oculto' : ''}">
+        <div class="producto-imagen">
+          ${art.foto ? `<img src="${art.foto}" alt="${art.nombre}">` : '<div class="no-image"><i class="ph ph-image"></i></div>'}
+        </div>
         <div class="producto-info">
           <h3>${art.nombre}</h3>
-          <p class="marca"><strong>${art.marca}</strong></p>
-          <div class="precio-container">
+          <p class="producto-marca">${art.marca}</p>
+          <div class="producto-codigo">Código: ${art.codigo}</div>
+          <div class="producto-precio">
             ${tieneDescuento ?
               `<span class="precio-anterior">$${(art.precio_mayorista || 0).toFixed(2)}</span>
                <span class="precio-actual">$${calcularPrecioMayoristaConDescuento(art).toFixed(2)}</span>
                <span class="descuento-badge">${precioInfo.descuento}% OFF</span>` :
-              `<span class="precio-actual">$${(art.precio_mayorista || 0).toFixed(2)}</span>`
+              `$${(art.precio_mayorista || 0).toFixed(2)}`
             }
           </div>
-          <p><b>Stock:</b>
-            <span class="stock-display stock-cantidad ${stockBajo?'stock-bajo':''}" onclick="editarStockInline(${realIndex})" style="cursor: pointer; user-select: none;" title="Clic para editar stock" id="stock-${realIndex}">${art.cantidad !== undefined ? art.cantidad : 'No definido'}</span>
-          </p>
+          <div class="producto-stock">
+            <span class="stock-badge ${getStockClass(art.cantidad)}">
+              Stock: <span onclick="editarStockInline(${realIndex})" style="cursor: pointer;" id="stock-${realIndex}">${art.cantidad !== undefined ? art.cantidad : 'No definido'}</span>
+            </span>
+          </div>
+          <div class="producto-actions">
+            ${modoEdicion ? `
+              <button class="btn-producto btn-editar" onclick="abrirEditar(${realIndex})" title="Editar">
+                <i class="ph ph-pencil"></i>
+              </button>
+              <button class="btn-producto btn-eliminar" onclick="abrirEliminar(${realIndex})" title="Eliminar">
+                <i class="ph ph-trash"></i>
+              </button>
+              <button class="btn-producto btn-ocultar" onclick="toggleVisibilidad(${realIndex})" title="${art.visible !== false ? 'Ocultar' : 'Mostrar'}">
+                <i class="ph ${art.visible !== false ? 'ph-eye' : 'ph-eye-slash'}"></i>
+              </button>
+            ` : ''}
+            <button class="btn-producto btn-marcar ${art.faltante ? 'marcado' : ''}" onclick="marcarFaltanteIndex(${realIndex})">
+              <i class="ph ${art.faltante?'ph-check':'ph-shopping-cart'}"></i>
+              ${art.faltante?"Disponible":(isAdmin() ? "Solo" : "Pedir")}
+            </button>
+          </div>
         </div>
-        <div class="acciones-con-cantidad">
+        <div class="acciones-con-cantidad" style="display: none;">
           <button class="quantity-btn minus" onclick="cambiarCantidad(${realIndex}, -1)">
             <i class="ph ph-minus"></i>
-          </button>
-          <button class="${art.faltante?'okBtn':'pedirBtn'}" onclick="marcarFaltanteIndex(${realIndex})">
-            <i class="ph ${art.faltante?'ph-check':'ph-shopping-cart'}"></i> ${art.faltante?"Disponible":(isAdmin() ? "Solo" : "Pedir")}
           </button>
           <button class="quantity-btn" onclick="cambiarCantidad(${realIndex}, 1)">
             <i class="ph ph-plus"></i>
           </button>
         </div>
-        <div class="codigo-producto">${art.codigo}</div>
       </div>
     `;
   });
@@ -796,22 +822,22 @@ function abrirConfiguracion() {
   const sidebar = document.getElementById("sidebarConfiguracion");
   const overlay = document.getElementById("overlay");
   
-  if(sidebar.classList.contains("active")) {
+  if(sidebar.classList.contains("open")) {
     // Cerrar sidebar
-    sidebar.classList.remove("active");
-    overlay.classList.remove("active");
+    sidebar.classList.remove("open");
+    overlay.classList.remove("open");
   } else {
     // Abrir sidebar
     cargarGrupos();
     renderizarGrupos();
-    sidebar.classList.add("active");
-    overlay.classList.add("active");
+    sidebar.classList.add("open");
+    overlay.classList.add("open");
   }
 }
 
 function cerrarConfiguracion() {
-  document.getElementById("sidebarConfiguracion").classList.remove("active");
-  document.getElementById("overlay").classList.remove("active");
+  document.getElementById("sidebarConfiguracion").classList.remove("open");
+  document.getElementById("overlay").classList.remove("open");
 }
 
 // Toggle de secciones colapsables
@@ -836,27 +862,27 @@ function cargarGrupos() {
   const selectFiltroGrupo = document.getElementById("filtroGrupo");
   
   if(selectGrupo) {
-    selectGrupo.innerHTML = '<option value="" data-placeholder="true">📁 Seleccionar grupo...</option>';
+    selectGrupo.innerHTML = '<option value="" data-placeholder="true"><i class="ph ph-folder"></i> Seleccionar grupo...</option>';
     grupos.forEach(grupo => {
       if (grupo !== "Sin grupo") {
-        selectGrupo.innerHTML += `<option value="${grupo}">📂 ${grupo}</option>`;
+        selectGrupo.innerHTML += `<option value="${grupo}"><i class="ph ph-folder-open"></i> ${grupo}</option>`;
       }
     });
   }
   
   if(selectEditGrupo) {
-    selectEditGrupo.innerHTML = '<option value="" data-placeholder="true">📁 Seleccionar grupo</option>';
+    selectEditGrupo.innerHTML = '<option value="" data-placeholder="true"><i class="ph ph-folder"></i> Seleccionar grupo</option>';
     grupos.forEach(grupo => {
       if (grupo !== "Sin grupo") {
-        selectEditGrupo.innerHTML += `<option value="${grupo}">📂 ${grupo}</option>`;
+        selectEditGrupo.innerHTML += `<option value="${grupo}"><i class="ph ph-folder-open"></i> ${grupo}</option>`;
       }
     });
   }
   
   if(selectFiltroGrupo) {
-    selectFiltroGrupo.innerHTML = '<option value="" data-placeholder="true">🗂️ Todos los grupos</option>';
+    selectFiltroGrupo.innerHTML = '<option value="" data-placeholder="true"><i class="ph ph-folders"></i> Todos los grupos</option>';
     grupos.forEach(grupo => {
-      selectFiltroGrupo.innerHTML += `<option value="${grupo}">📂 ${grupo}</option>`;
+      selectFiltroGrupo.innerHTML += `<option value="${grupo}"><i class="ph ph-folder-open"></i> ${grupo}</option>`;
     });
   }
 }
@@ -1264,7 +1290,7 @@ function actualizarNombreArchivo() {
   const textSpan = document.querySelector('.file-input-text');
   
   if(input.files && input.files[0]) {
-    textSpan.textContent = `📎 ${input.files[0].name}`;
+    textSpan.innerHTML = `<i class="ph ph-paperclip"></i> ${input.files[0].name}`;
     textSpan.style.color = '#667eea';
     textSpan.style.fontWeight = '600';
   } else {

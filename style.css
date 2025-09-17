@@ -741,7 +741,7 @@ body {
 .search-icon {
   position: absolute;
   left: 2.25rem;
-  top: 50%;
+  top: calc(1.5rem + 3rem);
   transform: translateY(-50%);
   color: var(--text-muted);
   font-size: 1.25rem;
@@ -781,8 +781,25 @@ body {
   box-shadow: var(--shadow-lg);
   padding: 1.5rem;
   margin-bottom: 1rem;
-  position: relative;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  animation: slideDown 0.2s ease;
 }
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 .dropdown-header {
   margin-bottom: 1rem;

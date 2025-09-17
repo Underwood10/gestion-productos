@@ -9,7 +9,7 @@ let currentUser = null;
 
 function initSupabase() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('TU_URL_DE_SUPABASE_AQUI') || SUPABASE_ANON_KEY.includes('TU_CLAVE_ANONIMA_DE_SUPABASE_AQUI')) {
-    showAuthMessage('⚠️ Configura primero tus credenciales de Supabase en config.js', 'warning');
+    showAuthMessage('<i class="ph ph-warning"></i> Configura primero tus credenciales de Supabase en config.js', 'warning');
     return false;
   }
 
@@ -29,10 +29,10 @@ function initSupabase() {
     // Crear cliente de Supabase
     window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    console.log('✅ Supabase inicializado correctamente');
+    console.log('✓ Supabase inicializado correctamente');
     return true;
   } catch (error) {
-    console.error('❌ Error inicializando Supabase:', error);
+    console.error('✗ Error inicializando Supabase:', error);
     showAuthMessage('Error de conexión con Supabase: ' + error.message, 'error');
     return false;
   }
@@ -54,7 +54,7 @@ async function login() {
   setLoading(loginBtn, true);
 
   try {
-    console.log('🔄 Iniciando sesión con sistema alternativo...');
+    console.log('⟳ Iniciando sesión con sistema alternativo...');
 
     // Buscar usuario en nuestra tabla
     const { data: userData, error } = await window.supabase
@@ -76,7 +76,7 @@ async function login() {
       return;
     }
 
-    console.log('✅ Credenciales correctas');
+    console.log('✓ Credenciales correctas');
 
     // Verificar estado del usuario
     if (userData.estado === 'pendiente') {
@@ -100,7 +100,7 @@ async function login() {
       }
     };
 
-    console.log('✅ Login exitoso:', { email: userData.email, role: userData.role });
+    console.log('✓ Login exitoso:', { email: userData.email, role: userData.role });
 
     showAuthMessage('¡Bienvenido de vuelta!', 'success');
 
@@ -110,7 +110,7 @@ async function login() {
     }, 1000);
 
   } catch (error) {
-    console.error('❌ Error en login:', error);
+    console.error('✗ Error en login:', error);
     showAuthMessage('Error de conexión: ' + error.message, 'error');
   } finally {
     setLoading(loginBtn, false);
@@ -140,7 +140,7 @@ async function register() {
   setLoading(registerBtn, true);
 
   try {
-    console.log('🔄 Registrando usuario directamente en base de datos...');
+    console.log('⟳ Registrando usuario directamente en base de datos...');
 
     // Verificar si el usuario ya existe
     const { data: existingUser, error: checkError } = await window.supabase
@@ -169,7 +169,7 @@ async function register() {
       created_at: new Date().toISOString()
     };
 
-    console.log('📝 Creando registro directo:', { ...userData, password_hash: '[HIDDEN]' });
+    console.log('✎ Creando registro directo:', { ...userData, password_hash: '[HIDDEN]' });
 
     const { data, error } = await window.supabase
       .from('user_profiles')
@@ -178,7 +178,7 @@ async function register() {
       .single();
 
     if (error) {
-      console.error('❌ Error creando usuario:', error);
+      console.error('✗ Error creando usuario:', error);
 
       if (error.code === '23505') {
         showAuthMessage('Este email ya está registrado', 'error');
@@ -190,7 +190,7 @@ async function register() {
       return;
     }
 
-    console.log('✅ Usuario registrado correctamente:', data);
+    console.log('✓ Usuario registrado correctamente:', data);
 
     if (isAdminUser) {
       showAuthMessage('¡Bienvenido Admin! Iniciando sesión...', 'success');
@@ -207,7 +207,7 @@ async function register() {
     }
 
   } catch (error) {
-    console.error('❌ Error en registro:', error);
+    console.error('✗ Error en registro:', error);
     showAuthMessage('Error de conexión: ' + error.message, 'error');
   } finally {
     setLoading(registerBtn, false);
@@ -243,7 +243,7 @@ async function createUserProfileOnRegister(user, name, empresa, telefono) {
       .limit(1);
 
     if (testError) {
-      console.error('❌ Error de acceso a tabla user_profiles:', {
+      console.error('✗ Error de acceso a tabla user_profiles:', {
         code: testError.code,
         message: testError.message,
         details: testError.details,
@@ -260,7 +260,7 @@ async function createUserProfileOnRegister(user, name, empresa, telefono) {
       }
     }
 
-    console.log('✅ Tabla user_profiles accesible, insertando perfil...');
+    console.log('✓ Tabla user_profiles accesible, insertando perfil...');
 
     // Intentar insertar el perfil
     const profileData = {
@@ -283,7 +283,7 @@ async function createUserProfileOnRegister(user, name, empresa, telefono) {
       .single();
 
     if (error) {
-      console.error('❌ Error insertando perfil:', {
+      console.error('✗ Error insertando perfil:', {
         code: error.code,
         message: error.message,
         details: error.details,
@@ -299,12 +299,12 @@ async function createUserProfileOnRegister(user, name, empresa, telefono) {
         throw new Error('Error creando perfil: ' + error.message);
       }
     } else {
-      console.log('✅ Perfil creado correctamente:', data);
+      console.log('✓ Perfil creado correctamente:', data);
       return data;
     }
 
   } catch (error) {
-    console.error('❌ Error en createUserProfileOnRegister:', error);
+    console.error('✗ Error en createUserProfileOnRegister:', error);
     throw error; // Propagar el error
   }
 }
@@ -972,7 +972,7 @@ function waitForSupabase() {
   return new Promise((resolve) => {
     // Si ya está disponible, resolver inmediatamente
     if (window.supabase && window.supabase.createClient) {
-      console.log('✅ Librería de Supabase ya disponible');
+      console.log('✓ Librería de Supabase ya disponible');
       resolve();
       return;
     }
@@ -982,7 +982,7 @@ function waitForSupabase() {
     // Esperar hasta que esté disponible
     const checkInterval = setInterval(() => {
       if (window.supabase && window.supabase.createClient) {
-        console.log('✅ Librería de Supabase cargada');
+        console.log('✓ Librería de Supabase cargada');
         clearInterval(checkInterval);
         resolve();
       }
@@ -991,14 +991,14 @@ function waitForSupabase() {
     // Timeout después de 10 segundos
     setTimeout(() => {
       clearInterval(checkInterval);
-      console.error('❌ Timeout esperando la librería de Supabase');
+      console.error('✗ Timeout esperando la librería de Supabase');
       resolve();
     }, 10000);
   });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('🚀 Iniciando aplicación...');
+  console.log('⚡ Iniciando aplicación...');
 
   // Esperar a que Supabase esté disponible
   await waitForSupabase();

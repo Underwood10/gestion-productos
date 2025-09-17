@@ -664,24 +664,24 @@ document.addEventListener('DOMContentLoaded', function() {
       if (icon.innerHTML === '' || window.getComputedStyle(icon).fontSize === '16px') {
         // El icono no se cargó, usar fallback Unicode
         const className = icon.className;
-        if (className.includes('ph-package')) icon.innerHTML = '📦';
-        else if (className.includes('ph-envelope')) icon.innerHTML = '✉️';
+        if (className.includes('ph-package')) icon.innerHTML = '□';
+        else if (className.includes('ph-envelope')) icon.innerHTML = '@';
         else if (className.includes('ph-lock')) icon.innerHTML = '🔒';
-        else if (className.includes('ph-user')) icon.innerHTML = '👤';
-        else if (className.includes('ph-buildings')) icon.innerHTML = '🏢';
-        else if (className.includes('ph-phone')) icon.innerHTML = '📞';
-        else if (className.includes('ph-storefront')) icon.innerHTML = '🏪';
-        else if (className.includes('ph-sign-out')) icon.innerHTML = '🚪';
-        else if (className.includes('ph-magnifying-glass')) icon.innerHTML = '🔍';
-        else if (className.includes('ph-shopping-cart')) icon.innerHTML = '🛒';
-        else if (className.includes('ph-file-text')) icon.innerHTML = '📄';
-        else if (className.includes('ph-clock')) icon.innerHTML = '🕐';
-        else if (className.includes('ph-crown')) icon.innerHTML = '👑';
-        else if (className.includes('ph-check-circle')) icon.innerHTML = '✅';
-        else if (className.includes('ph-currency-dollar')) icon.innerHTML = '💰';
+        else if (className.includes('ph-user')) icon.innerHTML = '⚐';
+        else if (className.includes('ph-buildings')) icon.innerHTML = '⌂';
+        else if (className.includes('ph-phone')) icon.innerHTML = '☎';
+        else if (className.includes('ph-storefront')) icon.innerHTML = '⌂';
+        else if (className.includes('ph-sign-out')) icon.innerHTML = '↗';
+        else if (className.includes('ph-magnifying-glass')) icon.innerHTML = '⌕';
+        else if (className.includes('ph-shopping-cart')) icon.innerHTML = '⚇';
+        else if (className.includes('ph-file-text')) icon.innerHTML = '⊞';
+        else if (className.includes('ph-clock')) icon.innerHTML = '⌚';
+        else if (className.includes('ph-crown')) icon.innerHTML = '♔';
+        else if (className.includes('ph-check-circle')) icon.innerHTML = '✓';
+        else if (className.includes('ph-currency-dollar')) icon.innerHTML = '$';
         else if (className.includes('ph-caret-down')) icon.innerHTML = '▼';
         else if (className.includes('ph-caret-up')) icon.innerHTML = '▲';
-        else if (className.includes('ph-image')) icon.innerHTML = '🖼️';
+        else if (className.includes('ph-image')) icon.innerHTML = '⊞';
         else icon.innerHTML = '•'; // fallback genérico
       }
     });
