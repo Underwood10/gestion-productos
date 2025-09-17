@@ -41,36 +41,77 @@ function initSupabase() {
 // ========== FUNCIONES DE AUTENTICACIÓN ==========
 async function login() {
   if (!window.supabase) return;
-  
+
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
-  
+
   if (!email || !password) {
     showAuthMessage('Por favor completa todos los campos', 'error');
     return;
   }
-  
+
   const loginBtn = document.getElementById('loginBtn');
   setLoading(loginBtn, true);
-  
+
   try {
-    const { data, error } = await window.supabase.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-    
-    if (error) {
-      showAuthMessage(getErrorMessage(error), 'error');
-    } else {
-      currentUser = data.user;
-      showAuthMessage('¡Bienvenido de vuelta!', 'success');
-      setTimeout(() => {
-        showMainApp();
-      }, 1000);
+    console.log('🔄 Iniciando sesión con sistema alternativo...');
+
+    // Buscar usuario en nuestra tabla
+    const { data: userData, error } = await window.supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error || !userData) {
+      showAuthMessage('Email o contraseña incorrectos', 'error');
+      return;
     }
+
+    // Verificar contraseña (codificación simple)
+    const passwordMatch = atob(userData.password_hash) === password;
+
+    if (!passwordMatch) {
+      showAuthMessage('Email o contraseña incorrectos', 'error');
+      return;
+    }
+
+    console.log('✅ Credenciales correctas');
+
+    // Verificar estado del usuario
+    if (userData.estado === 'pendiente') {
+      showAuthMessage('Tu cuenta está pendiente de autorización por el administrador', 'warning');
+      return;
+    }
+
+    if (userData.estado !== 'autorizado') {
+      showAuthMessage('Tu cuenta no está autorizada', 'error');
+      return;
+    }
+
+    // Login exitoso
+    currentUser = {
+      id: userData.id,
+      email: userData.email,
+      user_metadata: {
+        full_name: userData.nombre,
+        empresa: userData.empresa,
+        telefono: userData.telefono
+      }
+    };
+
+    console.log('✅ Login exitoso:', { email: userData.email, role: userData.role });
+
+    showAuthMessage('¡Bienvenido de vuelta!', 'success');
+
+    setTimeout(async () => {
+      const userRole = await checkUserRole(userData.email);
+      showAppBasedOnRole(userRole);
+    }, 1000);
+
   } catch (error) {
-    console.error('Error en login:', error);
-    showAuthMessage('Error de conexión', 'error');
+    console.error('❌ Error en login:', error);
+    showAuthMessage('Error de conexión: ' + error.message, 'error');
   } finally {
     setLoading(loginBtn, false);
   }
@@ -99,58 +140,75 @@ async function register() {
   setLoading(registerBtn, true);
 
   try {
-    const { data, error } = await window.supabase.auth.signUp({
+    console.log('🔄 Registrando usuario directamente en base de datos...');
+
+    // Verificar si el usuario ya existe
+    const { data: existingUser, error: checkError } = await window.supabase
+      .from('user_profiles')
+      .select('email')
+      .eq('email', email)
+      .single();
+
+    if (existingUser) {
+      showAuthMessage('Este email ya está registrado', 'error');
+      return;
+    }
+
+    // Si no existe, crear el registro directamente
+    const isAdminUser = email === window.APP_CONFIG.ADMIN_EMAIL;
+
+    const userData = {
       email: email,
-      password: password,
-      options: {
-        data: {
-          full_name: name,
-          empresa: empresa,
-          telefono: telefono
-        }
-      }
-    });
+      nombre: name,
+      empresa: empresa,
+      telefono: telefono,
+      password_hash: btoa(password), // Codificación simple (no segura para producción)
+      estado: isAdminUser ? 'autorizado' : 'pendiente',
+      role: isAdminUser ? 'admin' : 'solicitante',
+      puede_ver_precios: isAdminUser,
+      created_at: new Date().toISOString()
+    };
+
+    console.log('📝 Creando registro directo:', { ...userData, password_hash: '[HIDDEN]' });
+
+    const { data, error } = await window.supabase
+      .from('user_profiles')
+      .insert([userData])
+      .select()
+      .single();
 
     if (error) {
-      showAuthMessage(getErrorMessage(error), 'error');
-    } else {
-      if (data.user) {
-        currentUser = data.user;
+      console.error('❌ Error creando usuario:', error);
 
-        console.log('✅ Usuario registrado en Supabase Auth correctamente');
-        console.log('📋 Datos del usuario registrado:', {
-          id: data.user.id,
-          email: data.user.email,
-          email_confirmed: data.user.email_confirmed_at,
-          created_at: data.user.created_at
-        });
-
-        // Crear perfil de usuario automáticamente
-        try {
-          console.log('📝 Creando perfil de usuario...');
-          await createUserProfileOnRegister(data.user, name, empresa, telefono);
-          console.log('✅ Perfil creado exitosamente');
-        } catch (profileError) {
-          console.error('❌ Error creando perfil de usuario:', profileError);
-          showAuthMessage('Error guardando perfil: ' + profileError.message, 'error');
-          return;
-        }
-
-        if (!data.user.email_confirmed_at) {
-          showAuthMessage('Te hemos enviado un email de confirmación. Revisa tu bandeja de entrada.', 'info');
-        } else {
-          showAuthMessage('¡Solicitud enviada correctamente!', 'success');
-          setTimeout(async () => {
-            // Verificar rol y mostrar vista correspondiente
-            const userRole = await checkUserRole(data.user.email);
-            showAppBasedOnRole(userRole);
-          }, 1000);
-        }
+      if (error.code === '23505') {
+        showAuthMessage('Este email ya está registrado', 'error');
+      } else if (error.code === '42501') {
+        showAuthMessage('Error de permisos en la base de datos', 'error');
+      } else {
+        showAuthMessage('Error creando cuenta: ' + error.message, 'error');
       }
+      return;
     }
+
+    console.log('✅ Usuario registrado correctamente:', data);
+
+    if (isAdminUser) {
+      showAuthMessage('¡Bienvenido Admin! Iniciando sesión...', 'success');
+      setTimeout(() => {
+        // Simular login del admin
+        currentUser = { id: data.id, email: data.email };
+        showAppBasedOnRole('admin');
+      }, 1000);
+    } else {
+      showAuthMessage('¡Solicitud enviada correctamente! El administrador revisará tu solicitud.', 'success');
+      setTimeout(() => {
+        showAuthScreen();
+      }, 2000);
+    }
+
   } catch (error) {
-    console.error('Error en registro:', error);
-    showAuthMessage('Error de conexión', 'error');
+    console.error('❌ Error en registro:', error);
+    showAuthMessage('Error de conexión: ' + error.message, 'error');
   } finally {
     setLoading(registerBtn, false);
   }
@@ -268,40 +326,16 @@ async function logout() {
 
 // ========== GESTIÓN DE SESIÓN ==========
 async function checkAuthState() {
-  if (!window.supabase) return;
-
-  try {
-    const { data: { user } } = await window.supabase.auth.getUser();
-
-    if (user) {
-      currentUser = user;
-
-      // Verificar rol del usuario y mostrar vista correspondiente
-      const userRole = await checkUserRole(user.email);
-      showAppBasedOnRole(userRole);
-
-    } else {
-      showAuthScreen();
-    }
-  } catch (error) {
-    console.error('Error verificando autenticación:', error);
-    showAuthScreen();
-  }
+  // En nuestro sistema alternativo, no hay persistencia automática de sesión
+  // El usuario debe hacer login cada vez
+  console.log('🔄 Sistema alternativo: mostrando pantalla de login');
+  showAuthScreen();
 }
 
 // Escuchar cambios en el estado de autenticación
 function setupAuthListener() {
-  if (!window.supabase) return;
-  
-  window.supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      currentUser = session.user;
-      showMainApp();
-    } else if (event === 'SIGNED_OUT') {
-      currentUser = null;
-      showAuthScreen();
-    }
-  });
+  // Sistema alternativo sin Supabase Auth
+  console.log('✅ Sistema de autenticación alternativo configurado');
 }
 
 // ========== FUNCIONES DE UI ==========
