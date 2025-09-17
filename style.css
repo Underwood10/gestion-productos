@@ -895,11 +895,15 @@ button:focus {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
   z-index: 2000;
   backdrop-filter: blur(5px);
+}
+
+.modal.show {
+  display: flex !important;
 }
 
 .modal-content {
@@ -974,12 +978,16 @@ button:focus {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
   z-index: 2000;
   backdrop-filter: blur(5px);
   animation: fadeIn 0.2s ease;
+}
+
+.modal-custom.show {
+  display: flex !important;
 }
 
 .modal-content-custom {

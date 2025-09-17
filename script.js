@@ -511,7 +511,7 @@ function abrirEditar(index){
   document.getElementById("editPrecioMayorista").value=art.precio_mayorista || 0;
   document.getElementById("editFoto").src=art.foto;
   document.getElementById("editArchivo").value="";
-  document.getElementById("modalEditar").style.display="flex";
+  document.getElementById("modalEditar").classList.add("show");
 }
 async function guardarEdicion(){
   const nuevoNombre=capitalizar(document.getElementById("editNombre").value);
@@ -561,21 +561,21 @@ async function guardarEdicion(){
     cerrarModal();
   }
 }
-function cerrarModal(){ document.getElementById("modalEditar").style.display="none"; }
+function cerrarModal(){ document.getElementById("modalEditar").classList.remove("show"); }
 
 // --- ELIMINAR ---
 function abrirEliminar(index){ 
   indiceEliminar=index; 
-  document.getElementById("modalEliminar").style.display="flex"; 
+  document.getElementById("modalEliminar").classList.add("show"); 
 }
 function confirmarEliminar(){ 
   articulos.splice(indiceEliminar,1); 
   guardar(); 
   renderizar(); 
-  document.getElementById("modalEliminar").style.display="none";
+  document.getElementById("modalEliminar").classList.remove("show");
 }
 function cancelarEliminar(){ 
-  document.getElementById("modalEliminar").style.display="none"; 
+  document.getElementById("modalEliminar").classList.remove("show"); 
 }
 
 // --- BUSCADOR ---
@@ -585,7 +585,7 @@ function cancelarEliminar(){
 function descargarExcel() {
   const modal = document.getElementById("modalExcelInfo");
   if(modal) {
-    modal.style.display = "flex";
+    modal.classList.add("show");
   } else {
     alert("No se pudo encontrar el modal de Excel");
   }
@@ -667,7 +667,7 @@ function generarExcel() {
 }
 
 function cancelarExcel() {
-  document.getElementById("modalExcelInfo").style.display = "none";
+  document.getElementById("modalExcelInfo").classList.remove("show");
   document.getElementById("nombreEmpresa").value = "";
   document.getElementById("nombreUsuario").value = "";
 }
@@ -689,12 +689,12 @@ function resetearTodosLosMarcados() {
   textoConfirmacion.textContent = `¿Estás seguro de que quieres desmarcar todos los ${productosMarcadosCount} productos que están marcados para pedir?`;
   
   // Mostrar el modal personalizado
-  document.getElementById('modalConfirmReset').style.display = 'flex';
+  document.getElementById('modalConfirmReset').classList.add('show');
 }
 
 // Función para cancelar el reset
 function cancelarReset() {
-  document.getElementById('modalConfirmReset').style.display = 'none';
+  document.getElementById('modalConfirmReset').classList.remove('show');
 }
 
 // Función para confirmar el reset
@@ -717,7 +717,7 @@ function confirmarReset() {
   }
   
   // Cerrar modal
-  document.getElementById('modalConfirmReset').style.display = 'none';
+  document.getElementById('modalConfirmReset').classList.remove('show');
   
   // Mostrar mensaje de confirmación
   alert(`Se desmarcaron ${productosMarcadosCount} productos correctamente.`);
