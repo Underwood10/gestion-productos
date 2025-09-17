@@ -108,7 +108,12 @@ async function register() {
           console.log('Perfil creado exitosamente');
         } catch (profileError) {
           console.error('Error creando perfil de usuario:', profileError);
-          showAuthMessage('Usuario creado pero error configurando perfil: ' + profileError.message, 'warning');
+          console.error('Detalles completos del error:', {
+            message: profileError.message,
+            stack: profileError.stack,
+            code: profileError.code
+          });
+          showAuthMessage('Error guardando usuario en base de datos: ' + profileError.message, 'error');
           return; // Salir aquí para no continuar
         }
 
@@ -136,6 +141,7 @@ async function createUserProfileOnRegister(user, name, empresa, telefono) {
   try {
     const isAdminUser = user.email === window.APP_CONFIG.ADMIN_EMAIL;
 
+    console.log('=== DIAGNÓSTICO DE REGISTRO ===');
     console.log('Creando perfil para:', {
       id: user.id,
       email: user.email,
@@ -145,44 +151,83 @@ async function createUserProfileOnRegister(user, name, empresa, telefono) {
       isAdmin: isAdminUser
     });
 
-    // Primero verificar si la tabla existe
+    // Verificar conexión a Supabase
+    if (!window.supabase) {
+      throw new Error('Supabase no está inicializado');
+    }
+
+    console.log('Supabase conectado correctamente');
+
+    // Verificar si la tabla existe y es accesible
+    console.log('Verificando acceso a tabla user_profiles...');
     const { data: testData, error: testError } = await window.supabase
       .from('user_profiles')
-      .select('count')
+      .select('id')
       .limit(1);
 
     if (testError) {
-      console.error('La tabla user_profiles no existe o no tiene permisos:', testError);
-      throw new Error('Tabla user_profiles no accesible: ' + testError.message);
+      console.error('❌ Error de acceso a tabla user_profiles:', {
+        code: testError.code,
+        message: testError.message,
+        details: testError.details,
+        hint: testError.hint
+      });
+
+      // Verificar si es un problema de RLS
+      if (testError.code === '42501' || testError.message.includes('permission denied')) {
+        throw new Error('Permisos insuficientes para tabla user_profiles. Verifica las políticas RLS en Supabase.');
+      } else if (testError.code === '42P01' || testError.message.includes('does not exist')) {
+        throw new Error('La tabla user_profiles no existe en Supabase. Necesitas crearla.');
+      } else {
+        throw new Error('Error de base de datos: ' + testError.message);
+      }
     }
 
-    console.log('Tabla user_profiles accesible, insertando...');
+    console.log('✅ Tabla user_profiles accesible, insertando perfil...');
+
+    // Intentar insertar el perfil
+    const profileData = {
+      id: user.id,
+      email: user.email,
+      nombre: name,
+      empresa: empresa,
+      telefono: telefono,
+      estado: isAdminUser ? 'autorizado' : 'pendiente',
+      role: isAdminUser ? 'admin' : 'solicitante',
+      puede_ver_precios: isAdminUser
+    };
+
+    console.log('Datos a insertar:', profileData);
 
     const { data, error } = await window.supabase
       .from('user_profiles')
-      .insert([{
-        id: user.id,
-        email: user.email,
-        nombre: name,
-        empresa: empresa,
-        telefono: telefono,
-        estado: isAdminUser ? 'autorizado' : 'pendiente',
-        role: isAdminUser ? 'admin' : 'solicitante',
-        puede_ver_precios: isAdminUser
-      }]);
+      .insert([profileData])
+      .select()
+      .single();
 
     if (error) {
-      console.error('Error detallado creando perfil:', error);
-      console.error('Código de error:', error.code);
-      console.error('Mensaje:', error.message);
-      console.error('Detalles:', error.details);
-      throw new Error('Error insertando perfil: ' + error.message);
+      console.error('❌ Error insertando perfil:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+
+      // Mensajes de error más específicos
+      if (error.code === '23505') {
+        throw new Error('Este usuario ya está registrado');
+      } else if (error.code === '42501') {
+        throw new Error('Permisos insuficientes para crear perfil');
+      } else {
+        throw new Error('Error creando perfil: ' + error.message);
+      }
     } else {
-      console.log('Perfil creado correctamente:', data);
+      console.log('✅ Perfil creado correctamente:', data);
+      return data;
     }
 
   } catch (error) {
-    console.error('Error en createUserProfileOnRegister:', error);
+    console.error('❌ Error en createUserProfileOnRegister:', error);
     throw error; // Propagar el error
   }
 }
