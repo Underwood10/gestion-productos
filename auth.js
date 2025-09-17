@@ -102,20 +102,9 @@ async function register() {
       if (data.user) {
         currentUser = data.user;
 
-        // Crear perfil de usuario automáticamente
-        try {
-          await createUserProfileOnRegister(data.user, name, empresa, telefono);
-          console.log('Perfil creado exitosamente');
-        } catch (profileError) {
-          console.error('Error creando perfil de usuario:', profileError);
-          console.error('Detalles completos del error:', {
-            message: profileError.message,
-            stack: profileError.stack,
-            code: profileError.code
-          });
-          showAuthMessage('Error guardando usuario en base de datos: ' + profileError.message, 'error');
-          return; // Salir aquí para no continuar
-        }
+        // TEMPORAL: Deshabilitar creación automática de perfil para debug
+        console.log('✅ Usuario registrado en Supabase Auth correctamente');
+        console.log('⚠️ Creación de perfil deshabilitada temporalmente para debugging');
 
         if (!data.user.email_confirmed_at) {
           showAuthMessage('Te hemos enviado un email de confirmación. Revisa tu bandeja de entrada.', 'info');
