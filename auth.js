@@ -12,13 +12,28 @@ function initSupabase() {
     showAuthMessage('⚠️ Configura primero tus credenciales de Supabase en config.js', 'warning');
     return false;
   }
-  
+
   try {
+    // Verificar que la librería de Supabase esté cargada
+    if (!window.supabase || !window.supabase.createClient) {
+      console.error('La librería de Supabase no está cargada');
+      showAuthMessage('Error: Librería de Supabase no disponible', 'error');
+      return false;
+    }
+
+    console.log('Inicializando Supabase con:', {
+      url: SUPABASE_URL,
+      keyLength: SUPABASE_ANON_KEY.length
+    });
+
+    // Crear cliente de Supabase
     window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    console.log('✅ Supabase inicializado correctamente');
     return true;
   } catch (error) {
-    console.error('Error inicializando Supabase:', error);
-    showAuthMessage('Error de conexión con Supabase', 'error');
+    console.error('❌ Error inicializando Supabase:', error);
+    showAuthMessage('Error de conexión con Supabase: ' + error.message, 'error');
     return false;
   }
 }
@@ -102,9 +117,24 @@ async function register() {
       if (data.user) {
         currentUser = data.user;
 
-        // TEMPORAL: Deshabilitar creación automática de perfil para debug
         console.log('✅ Usuario registrado en Supabase Auth correctamente');
-        console.log('⚠️ Creación de perfil deshabilitada temporalmente para debugging');
+        console.log('📋 Datos del usuario registrado:', {
+          id: data.user.id,
+          email: data.user.email,
+          email_confirmed: data.user.email_confirmed_at,
+          created_at: data.user.created_at
+        });
+
+        // Crear perfil de usuario automáticamente
+        try {
+          console.log('📝 Creando perfil de usuario...');
+          await createUserProfileOnRegister(data.user, name, empresa, telefono);
+          console.log('✅ Perfil creado exitosamente');
+        } catch (profileError) {
+          console.error('❌ Error creando perfil de usuario:', profileError);
+          showAuthMessage('Error guardando perfil: ' + profileError.message, 'error');
+          return;
+        }
 
         if (!data.user.email_confirmed_at) {
           showAuthMessage('Te hemos enviado un email de confirmación. Revisa tu bandeja de entrada.', 'info');
@@ -892,7 +922,41 @@ function getCurrentUserEmail() {
 }
 
 // ========== INICIALIZACIÓN ==========
+function waitForSupabase() {
+  return new Promise((resolve) => {
+    // Si ya está disponible, resolver inmediatamente
+    if (window.supabase && window.supabase.createClient) {
+      console.log('✅ Librería de Supabase ya disponible');
+      resolve();
+      return;
+    }
+
+    console.log('⏳ Esperando que se cargue la librería de Supabase...');
+
+    // Esperar hasta que esté disponible
+    const checkInterval = setInterval(() => {
+      if (window.supabase && window.supabase.createClient) {
+        console.log('✅ Librería de Supabase cargada');
+        clearInterval(checkInterval);
+        resolve();
+      }
+    }, 100);
+
+    // Timeout después de 10 segundos
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      console.error('❌ Timeout esperando la librería de Supabase');
+      resolve();
+    }, 10000);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 Iniciando aplicación...');
+
+  // Esperar a que Supabase esté disponible
+  await waitForSupabase();
+
   // Intentar inicializar Supabase
   if (initSupabase()) {
     setupAuthListener();
