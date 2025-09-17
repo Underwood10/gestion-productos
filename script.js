@@ -173,7 +173,7 @@ function renderizar(lista=null){
           </div>
           <div class="producto-stock">
             <span class="stock-badge ${getStockClass(art.cantidad)}">
-              Stock: <span onclick="editarStockInline(${realIndex})" style="cursor: pointer;" id="stock-${realIndex}">${art.cantidad !== undefined ? art.cantidad : 'No definido'}</span>
+              Stock: <span onclick="editarStockInline(${realIndex})" style="cursor: pointer;" id="stock-display-${realIndex}">${art.cantidad !== undefined ? art.cantidad : 'No definido'}</span>
             </span>
           </div>
           <div class="producto-actions">
@@ -231,6 +231,10 @@ async function agregar(){
 
   // Mostrar loading en el botón
   const btnAgregar = document.querySelector('.btn-add-pro');
+  if (!btnAgregar) {
+    console.error('Botón agregar no encontrado');
+    return;
+  }
   const btnText = btnAgregar.querySelector('span');
   const btnLoader = btnAgregar.querySelector('.btn-loader');
   btnAgregar.disabled = true;
@@ -752,7 +756,7 @@ function confirmarReset() {
 
 // Función para edición inline del stock
 function editarStockInline(index) {
-  const stockElement = document.getElementById(`stock-${index}`);
+  const stockElement = document.getElementById(`stock-display-${index}`) || document.getElementById(`stock-${index}`);
   if(!stockElement) return;
   
   const valorActual = articulos[index].cantidad !== undefined ? articulos[index].cantidad : 0;
@@ -970,7 +974,8 @@ function filtrarPorGrupo() {
   aplicarFiltros();
   
   // Cerrar el dropdown después de seleccionar
-  document.getElementById('filtroGrupos').style.display = 'none';
+  const filtroGrupos = document.getElementById('filtroGrupos');
+  if (filtroGrupos) filtroGrupos.style.display = 'none';
 }
 
 function filtrarPorVisibilidad() {
@@ -984,7 +989,8 @@ function filtrarPorVisibilidad() {
   aplicarFiltros();
   
   // Cerrar el dropdown después de seleccionar
-  document.getElementById('filtroVisibilidad').style.display = 'none';
+  const filtroVisibilidad = document.getElementById('filtroVisibilidad');
+  if (filtroVisibilidad) filtroVisibilidad.style.display = 'none';
 }
 
 function filtrarPorStock() {
@@ -998,7 +1004,8 @@ function filtrarPorStock() {
   aplicarFiltros();
   
   // Cerrar el dropdown después de seleccionar
-  document.getElementById('filtroStock').style.display = 'none';
+  const filtroStock = document.getElementById('filtroStock');
+  if (filtroStock) filtroStock.style.display = 'none';
 }
 
 function aplicarFiltros() {
@@ -1133,7 +1140,8 @@ function posicionarDropdown(dropdownId, button) {
   const dropdowns = ['filtroGrupos', 'filtroVisibilidad', 'filtroStock'];
   dropdowns.forEach(id => {
     if(id !== dropdownId) {
-      document.getElementById(id).style.display = 'none';
+      const element = document.getElementById(id);
+      if (element) element.style.display = 'none';
     }
   });
   
@@ -1260,29 +1268,7 @@ function cargarConfiguracionCarga() {
 }
 
 // --- MODO EDICION ---
-function toggleEditMode() {
-  modoEdicion = !modoEdicion;
-  const btn = document.querySelector('.edit-mode-btn');
-  
-  if(modoEdicion) {
-    btn.classList.add('active');
-    btn.title = 'Salir del modo edición';
-  } else {
-    btn.classList.remove('active');
-    btn.title = 'Modo edición';
-  }
-  
-  renderizar();
-}
 
-function toggleVisibilidad(index) {
-  if(articulos[index].visible === undefined) {
-    articulos[index].visible = true;
-  }
-  articulos[index].visible = !articulos[index].visible;
-  guardar();
-  aplicarFiltros();
-}
 
 // Función para actualizar el nombre del archivo
 function actualizarNombreArchivo() {
@@ -1623,11 +1609,14 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('click', function(event) {
     const isFilterButton = event.target.closest('.fixed-filter-icon');
     const isDropdown = event.target.closest('.filter-dropdown');
-    
+
     if(!isFilterButton && !isDropdown) {
       const dropdowns = ['filtroGrupos', 'filtroVisibilidad', 'filtroStock'];
       dropdowns.forEach(id => {
-        document.getElementById(id).style.display = 'none';
+        const element = document.getElementById(id);
+        if (element) {
+          element.style.display = 'none';
+        }
       });
     }
   });

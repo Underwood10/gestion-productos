@@ -356,8 +356,11 @@ function showRegister() {
 }
 
 function showAuthScreen() {
-  document.getElementById('authScreen').style.display = 'flex';
-  document.getElementById('mainApp').style.display = 'none';
+  const authScreen = document.getElementById('authScreen');
+  const mainApp = document.getElementById('mainApp');
+
+  if (authScreen) authScreen.style.display = 'flex';
+  if (mainApp) mainApp.style.display = 'none';
   clearAuthMessage();
 }
 
@@ -387,8 +390,11 @@ function showAppBasedOnRole(role) {
 }
 
 function showMainApp() {
-  document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'block';
+  const authScreen = document.getElementById('authScreen');
+  const mainApp = document.getElementById('mainApp');
+
+  if (authScreen) authScreen.style.display = 'none';
+  if (mainApp) mainApp.style.display = 'block';
 
   // Actualizar información del usuario en la app principal
   updateUserInfo();
@@ -405,8 +411,12 @@ function showMainApp() {
 }
 
 function showCatalogoMayorista() {
-  document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('mainApp').innerHTML = `
+  const authScreen = document.getElementById('authScreen');
+  const mainApp = document.getElementById('mainApp');
+
+  if (authScreen) authScreen.style.display = 'none';
+  if (mainApp) {
+    mainApp.innerHTML = `
     <div class="catalogo-mayorista">
       <header class="catalogo-header">
         <h1><i class="ph ph-storefront"></i> Catálogo Mayorista</h1>
@@ -437,15 +447,20 @@ function showCatalogoMayorista() {
       </div>
     </div>
   `;
-  document.getElementById('mainApp').style.display = 'block';
+    mainApp.style.display = 'block';
+  }
 
   // Cargar productos con precios
   cargarProductosParaMayoristas();
 }
 
 function showCatalogoPublico() {
-  document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('mainApp').innerHTML = `
+  const authScreen = document.getElementById('authScreen');
+  const mainApp = document.getElementById('mainApp');
+
+  if (authScreen) authScreen.style.display = 'none';
+  if (mainApp) {
+    mainApp.innerHTML = `
     <div class="catalogo-publico">
       <header class="catalogo-header">
         <h1><i class="ph ph-storefront"></i> Nuestros Productos</h1>
@@ -481,7 +496,8 @@ function showCatalogoPublico() {
       </div>
     </div>
   `;
-  document.getElementById('mainApp').style.display = 'block';
+    mainApp.style.display = 'block';
+  }
 
   // Cargar productos sin precios
   cargarProductosPublicos();
@@ -586,11 +602,45 @@ function contactarVentas() {
 }
 
 function filtrarProductosMayorista() {
-  // TODO: Implementar filtros para mayoristas
+  const searchTerm = document.getElementById('buscadorMayorista').value.toLowerCase();
+  const contenedor = document.getElementById('productosConPrecios');
+
+  if (!contenedor) return;
+
+  const productos = contenedor.children;
+  for (let i = 0; i < productos.length; i++) {
+    const producto = productos[i];
+    const nombre = producto.querySelector('h3')?.textContent.toLowerCase() || '';
+    const marca = producto.querySelector('.marca')?.textContent.toLowerCase() || '';
+    const codigo = producto.querySelector('.codigo')?.textContent.toLowerCase() || '';
+
+    const coincide = nombre.includes(searchTerm) ||
+                    marca.includes(searchTerm) ||
+                    codigo.includes(searchTerm);
+
+    producto.style.display = coincide ? 'block' : 'none';
+  }
 }
 
 function filtrarProductosPublicos() {
-  // TODO: Implementar filtros para vista pública
+  const searchTerm = document.getElementById('buscadorPublico').value.toLowerCase();
+  const contenedor = document.getElementById('productosPublicos');
+
+  if (!contenedor) return;
+
+  const productos = contenedor.children;
+  for (let i = 0; i < productos.length; i++) {
+    const producto = productos[i];
+    const nombre = producto.querySelector('h3')?.textContent.toLowerCase() || '';
+    const marca = producto.querySelector('.marca')?.textContent.toLowerCase() || '';
+    const codigo = producto.querySelector('.codigo')?.textContent.toLowerCase() || '';
+
+    const coincide = nombre.includes(searchTerm) ||
+                    marca.includes(searchTerm) ||
+                    codigo.includes(searchTerm);
+
+    producto.style.display = coincide ? 'block' : 'none';
+  }
 }
 
 // ========== FUNCIONES DEL PANEL DE ADMINISTRACIÓN ==========
@@ -826,43 +876,55 @@ function updateUserInfo() {
 
     // Agregar botón de logout si no existe
     const userInfoContainer = userInfoElement.parentElement;
-    let logoutBtn = userInfoContainer.querySelector('.user-logout-btn');
-    if (!logoutBtn) {
-      logoutBtn = document.createElement('button');
-      logoutBtn.className = 'user-logout-btn';
-      logoutBtn.innerHTML = '<i class="ph ph-sign-out"></i>';
-      logoutBtn.onclick = logout;
-      logoutBtn.title = 'Cerrar sesión';
-      userInfoContainer.appendChild(logoutBtn);
+    if (userInfoContainer) {
+      let logoutBtn = userInfoContainer.querySelector('.user-logout-btn');
+      if (!logoutBtn) {
+        logoutBtn = document.createElement('button');
+        logoutBtn.className = 'user-logout-btn';
+        logoutBtn.innerHTML = '<i class="ph ph-sign-out"></i>';
+        logoutBtn.onclick = logout;
+        logoutBtn.title = 'Cerrar sesión';
+        userInfoContainer.appendChild(logoutBtn);
+      }
     }
+  } else {
+    console.warn('Elemento userInfo no encontrado o usuario no autenticado');
   }
 }
 
 function showAuthMessage(message, type = 'info') {
   const messageEl = document.getElementById('authMessage');
-  messageEl.textContent = message;
-  messageEl.className = `auth-message ${type}`;
-  messageEl.style.display = 'block';
+  if (messageEl) {
+    messageEl.textContent = message;
+    messageEl.className = `auth-message ${type}`;
+    messageEl.style.display = 'block';
+  } else {
+    console.warn('Elemento authMessage no encontrado:', message);
+  }
 }
 
 function clearAuthMessage() {
   const messageEl = document.getElementById('authMessage');
-  messageEl.style.display = 'none';
-  messageEl.textContent = '';
+  if (messageEl) {
+    messageEl.style.display = 'none';
+    messageEl.textContent = '';
+  }
 }
 
 function setLoading(button, loading) {
+  if (!button) return;
+
   const btnText = button.querySelector('.btn-text');
   const btnLoader = button.querySelector('.btn-loader');
-  
+
   if (loading) {
     button.disabled = true;
-    btnText.style.display = 'none';
-    btnLoader.style.display = 'inline-block';
+    if (btnText) btnText.style.display = 'none';
+    if (btnLoader) btnLoader.style.display = 'inline-block';
   } else {
     button.disabled = false;
-    btnText.style.display = 'inline';
-    btnLoader.style.display = 'none';
+    if (btnText) btnText.style.display = 'inline';
+    if (btnLoader) btnLoader.style.display = 'none';
   }
 }
 
