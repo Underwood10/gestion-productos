@@ -328,14 +328,14 @@ async function logout() {
 async function checkAuthState() {
   // En nuestro sistema alternativo, no hay persistencia automática de sesión
   // El usuario debe hacer login cada vez
-  console.log('🔄 Sistema alternativo: mostrando pantalla de login');
+  console.log('⟳ Sistema alternativo: mostrando pantalla de login');
   showAuthScreen();
 }
 
 // Escuchar cambios en el estado de autenticación
 function setupAuthListener() {
   // Sistema alternativo sin Supabase Auth
-  console.log('✅ Sistema de autenticación alternativo configurado');
+  console.log('✓ Sistema de autenticación alternativo configurado');
 }
 
 // ========== FUNCIONES DE UI ==========

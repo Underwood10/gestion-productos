@@ -1603,6 +1603,17 @@ function cargarDescuentosDesdeStorage() {
 }
 
 // Inicialización cuando se carga la página
+// Función para cargar grupos en filtro
+function cargarGruposEnFiltro() {
+  const selectFiltroGrupo = document.getElementById("filtroGrupo");
+  if (selectFiltroGrupo) {
+    selectFiltroGrupo.innerHTML = '<option value="" data-placeholder="true"><i class="ph ph-folders"></i> Todos los grupos</option>';
+    grupos.forEach(grupo => {
+      selectFiltroGrupo.innerHTML += `<option value="${grupo}"><i class="ph ph-folder-open"></i> ${grupo}</option>`;
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   renderizar(); // Cargar artículos (solo visibles por defecto)
   cargarGruposEnFormulario();
